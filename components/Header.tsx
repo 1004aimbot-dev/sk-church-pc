@@ -9,6 +9,12 @@ const Header: React.FC = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // 관리자 로그인 모달 상태 복구
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     // 모바일 메뉴 열려있을 때 스크롤 방지
     if (isMobileMenuOpen) {
