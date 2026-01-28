@@ -21,12 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const { prompt, systemInstruction } = req.body;
 
-        // [중요] Vercel 환경 변수 오류 시, 아래 따옴표 "" 안에 직접 API Key를 붙여넣으세요.
-        // 예: const HARDCODED_KEY = "AIzaSy...";
-        const HARDCODED_KEY = "AIzaSyCe6GwVbs-mZlLj5VZu1Oh95IURrgQsunw";
-
-        // 환경 변수 또는 하드코딩된 키 사용
-        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || HARDCODED_KEY;
+        // [보안] Vercel 환경 변수에서 키를 가져옵니다. (사용자가 Vercel Settings에 저장함)
+        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY;
 
         if (!apiKey) {
             // 모든 키 출력 (보안상 값은 제외)
