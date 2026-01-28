@@ -27,12 +27,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!apiKey) {
             // 모든 키 출력 (보안상 값은 제외)
             const allKeys = Object.keys(env);
-            console.error('SERVER: API Key Missing. All Keys:', allKeys);
+            console.error('SERVER: API Key Missing. Please check Vercel "Environment Variables" settings.');
             return res.status(500).json({
                 error: `Server Build Error: API Key not found.`,
                 debug_info: `All Env Keys: ${allKeys.join(', ') || 'EMPTY_OBJECT'}`
             });
         }
+
+        console.log(`SERVER: API Key Found! (Length: ${apiKey.length})`); // 키 로드 성공 로그 추가
 
         const ai = new GoogleGenAI({ apiKey });
 
