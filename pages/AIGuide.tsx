@@ -78,6 +78,7 @@ const AIGuide: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-gemini-api-key': import.meta.env.VITE_GEMINI_API_KEY || ''
         },
         body: JSON.stringify({
           prompt: userText,
