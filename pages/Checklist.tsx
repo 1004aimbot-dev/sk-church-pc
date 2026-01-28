@@ -151,6 +151,10 @@ const Checklist: React.FC = () => {
           <p className="text-blue-600 font-medium text-lg">
             {selectedDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}의 기록
           </p>
+          <p className="text-slate-400 text-sm font-medium flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">lock</span>
+            오늘의 QT는 개인만이 볼 수 있는 공간입니다.
+          </p>
         </div>
         <button
           onClick={handleSave}
@@ -283,11 +287,27 @@ const Checklist: React.FC = () => {
                 />
               </div>
               <div className="mt-6" onClick={(e) => e.stopPropagation()}>
-                <input
-                  className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                <textarea
+                  rows={1}
+                  className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-100 transition-all outline-none resize-none overflow-hidden break-words whitespace-pre-wrap"
                   placeholder="오늘 읽은 본문을 기록하세요"
                   value={bibleText}
-                  onChange={(e) => setBibleText(e.target.value)}
+                  onChange={(e) => {
+                    setBibleText(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = 'auto';
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -348,12 +368,29 @@ const Checklist: React.FC = () => {
               </div>
               <div className="mt-6 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[0, 1, 2].map(i => (
-                  <input
+                  <textarea
                     key={i}
-                    className="w-full bg-transparent border-b border-gray-100 py-3 text-sm focus:border-blue-600 transition-colors outline-none"
+                    rows={1}
+                    className="w-full bg-transparent border-b border-gray-100 py-3 text-sm focus:border-blue-600 transition-colors outline-none resize-none overflow-hidden break-words whitespace-pre-wrap"
                     placeholder={`${i + 1}. 감사한 일 기록하기...`}
                     value={gratitudeTexts[i]}
-                    onChange={(e) => handleGratitudeChange(i, e.target.value)}
+                    onChange={(e) => {
+                      handleGratitudeChange(i, e.target.value);
+                      e.target.style.height = 'auto'; // Reset height
+                      e.target.style.height = `${e.target.scrollHeight}px`; // Set new height
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = `${target.scrollHeight}px`;
+                    }}
+                    // Ensure height is adjusted on mount if there's content (trickier with map, but onFocus or separate effect helps. simplified for now)
+                    ref={(el) => {
+                      if (el) {
+                        el.style.height = 'auto';
+                        el.style.height = `${el.scrollHeight}px`;
+                      }
+                    }}
                   />
                 ))}
               </div>
@@ -362,7 +399,7 @@ const Checklist: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-blue-50 rounded-[2rem] p-10 border-l-8 border-blue-600 relative overflow-hidden">
+      <div className="bg-blue-50 rounded-[2rem] py-6 px-10 border-l-8 border-blue-600 relative overflow-hidden">
         <span className="material-symbols-outlined text-[100px] text-blue-600 opacity-5 absolute -right-4 -bottom-4">church</span>
         <div className="relative z-10 space-y-6">
           <p className="font-myeongjo italic text-2xl text-blue-900 leading-relaxed">

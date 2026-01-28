@@ -79,7 +79,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'ID is required' });
             }
 
-            await sql`DELETE FROM newcomers WHERE id = ${id}`;
+            const targetId = (Array.isArray(id) ? id[0] : id) as string;
+            await sql`DELETE FROM newcomers WHERE id = ${targetId}`;
             return res.status(200).json({ success: true });
         }
 
