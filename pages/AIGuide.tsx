@@ -87,7 +87,7 @@ const AIGuide: React.FC = () => {
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
         // 클라이언트 사이드 직접 호출 (Estimate-App 방식)
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ''; // Vite 환경변수
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
 
         if (!apiKey) {
           throw new Error("API 키가 설정되지 않았습니다. (VITE_GEMINI_API_KEY)");
