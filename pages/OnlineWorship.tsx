@@ -246,15 +246,29 @@ const OnlineWorship: React.FC = () => {
     setIsAnalyzing(true);
     setIsSummaryModalOpen(true);
     setAiSummary('');
+
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key Missing");
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `다음 설교 정보를 바탕으로 성도들을 위한 깊이 있는 '설교 요약본'을 작성해 주세요. 제목: ${activeSermon.title}, 설교자: ${activeSermon.pastor}, 본문: ${activeSermon.passage}`;
-      const response = await ai.models.generateContent({ model: 'gemini-1.5-flash', contents: prompt });
-      setAiSummary(response.text || '요약본 생성 중 오류가 발생했습니다.');
+      const response = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: activeSermon.title,
+          pastor: activeSermon.pastor,
+          passage: activeSermon.passage
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Server Error');
+      }
+
+      const data = await response.json();
+      setAiSummary(data.summary || '요약본을 생성하지 못했습니다.');
+
     } catch (error) {
-      setAiSummary('AI 분석 엔진 연결에 실패했습니다.');
+      console.error(error);
+      setAiSummary('AI 분석 엔진 연결에 실패했습니다. (서버 키 설정 확인 필요)');
     } finally {
       setIsAnalyzing(false);
     }
