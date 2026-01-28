@@ -301,4 +301,4 @@ const NewcomerRegister: React.FC = () => {
 
 export default NewcomerRegister;
 
-export default NewcomerRegister;
+
