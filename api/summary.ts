@@ -1,6 +1,6 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS 설정
@@ -25,14 +25,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { title, pastor, passage } = req.body;
 
         const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-        // VITE_ prefix가 붙은 키도 혹시 모르니 확인 (로컬에선 .env를 공유할 수 있으므로)
 
         if (!apiKey) {
             console.error("API Key Missing in Server Environment");
             return res.status(500).json({ error: 'Server Configuration Error: API Key Missing' });
         }
 
-        const ai = new GoogleGenAI({ apiKey });
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
         const prompt = `다음 설교 정보를 바탕으로 성도들을 위한 깊이 있고 은혜로운 '설교 요약본'을 작성해 주세요. 
         
         제목: ${title}
@@ -46,12 +47,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         말투: "~합니다", "~습니다"의 경어체로 정중하고 따뜻하게 작성해 주세요.`;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt
-        });
-
-        const summary = response.text;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const summary = response.text();
 
         return res.status(200).json({ summary });
 
