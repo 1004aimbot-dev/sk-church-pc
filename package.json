@@ -20,8 +20,10 @@
     "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
+    "@types/node": "^22.19.7",
     "@vitejs/plugin-react": "^5.0.0",
+    "dotenv": "^17.2.3",
+    "ts-node": "^10.9.2",
     "typescript": "~5.8.2",
     "vercel": "^50.7.1",
     "vite": "^6.2.0"
