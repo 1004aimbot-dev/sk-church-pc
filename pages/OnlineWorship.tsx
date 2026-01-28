@@ -122,7 +122,8 @@ const OnlineWorship: React.FC = () => {
   };
 
   const extractVideoId = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    // live 경로 및 다양한 유튜브 URL 패턴 지원 강화
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
@@ -197,11 +198,11 @@ const OnlineWorship: React.FC = () => {
     const startSec = timeStringToSeconds(formData.startTime);
     const endSec = timeStringToSeconds(formData.endTime);
 
-    // 유튜브 썸네일 자동 추출
+    // 유튜브 썸네일 자동 추출 (hqdefault: 480x360 - 가장 안정적)
     let thumbnailToSave = formData.thumbnail;
     const videoId = extractVideoId(formData.youtubeUrl);
     if (videoId) {
-      thumbnailToSave = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      thumbnailToSave = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
     const sermonToSave: Sermon = {
@@ -483,6 +484,22 @@ const OnlineWorship: React.FC = () => {
                 </div>
               </div>
               <input className="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-bold outline-none" placeholder="유튜브 URL" value={formData.youtubeUrl} onChange={e => setFormData({ ...formData, youtubeUrl: e.target.value })} required />
+
+              {/* 썸네일 미리보기 */}
+              {extractVideoId(formData.youtubeUrl) && (
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                  <p className="text-xs font-bold text-slate-400 mb-2">썸네일 미리보기</p>
+                  <div className="aspect-video rounded-lg overflow-hidden bg-black/10 relative">
+                    <img
+                      src={`https://img.youtube.com/vi/${extractVideoId(formData.youtubeUrl)}/hqdefault.jpg`}
+                      className="w-full h-full object-cover"
+                      alt="Thumbnail Preview"
+                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/480x360/eee/999?text=No+Image'; }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4">
                 <button type="button" onClick={() => setIsSermonModalOpen(false)} className="flex-1 py-4 text-slate-400 font-bold hover:bg-gray-50 rounded-2xl transition-all">취소</button>
                 <button type="submit" className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-50 hover:bg-blue-700 transition-all">저장 완료</button>
