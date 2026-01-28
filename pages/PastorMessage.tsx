@@ -35,6 +35,8 @@ const DEFAULT_PROFILE: PastorProfile = {
 const PastorMessage: React.FC = () => {
   const { isAdmin } = useContext(AdminContext);
   const [profile, setProfile] = useState<PastorProfile>(DEFAULT_PROFILE);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // 디버깅용 상태
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
