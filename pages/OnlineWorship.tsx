@@ -66,7 +66,19 @@ const OnlineWorship: React.FC = () => {
 
   // 설교 데이터 상태 관리 (초기값: 로딩 전 기본 데이터만, localStorage 사용 안함)
   const [sermons, setSermons] = useState<Sermon[]>([
-    { id: 1, title: "오직 믿음으로 사는 삶", pastor: "이현용 담임목사", passage: "요한복음 3:16", series: "믿음의 능력 시리즈", date: "2026.01.04", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", startTime: 0, endTime: 300, duration: "05:00", thumbnail: "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=1200" }
+    {
+      id: 1,
+      title: "성남신광교회 주일 대예배",
+      pastor: "이현용 담임목사",
+      passage: "",
+      series: "주일 예배",
+      date: "2024.01.28",
+      youtubeUrl: "https://www.youtube.com/watch?v=BbUdtt8UDoI",
+      startTime: 2697,
+      endTime: 3976,
+      duration: "21:19",
+      thumbnail: "https://img.youtube.com/vi/BbUdtt8UDoI/hqdefault.jpg"
+    }
   ]);
 
   const [activeSermon, setActiveSermon] = useState<Sermon | null>(null);
