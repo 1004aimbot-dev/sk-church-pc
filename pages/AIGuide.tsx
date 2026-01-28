@@ -62,12 +62,6 @@ const AIGuide: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("API Key가 설정되지 않았습니다.");
-      }
-      const ai = new GoogleGenAI({ apiKey });
-
       const personalizedInstruction = `당신은 성남신광교회 성도들을 돕는 자상하고 지혜로운 "AI 성경 길잡이"입니다. 
       사용자 정보 - 이름: ${userInfo.name || '미설정'}, 직분: ${userInfo.title}
 
@@ -77,15 +71,26 @@ const AIGuide: React.FC = () => {
       3. 답변 중에 반드시 **"${userInfo.name || '성도'} ${userInfo.title}님"**이라고 호칭을 사용하여 따뜻한 유대감을 형성하십시오.
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: userText,
-        config: {
+      // API 라우트로 요청 전송 (프론트엔드 키 노출 없이 안전하게 실행)
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: userText,
           systemInstruction: personalizedInstruction,
-        }
+        }),
       });
 
-      const aiText = response.text || '죄송합니다. 말씀을 찾는 중에 잠시 문제가 생겼습니다. 다시 말씀해 주시겠어요?';
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Server Error: ${response.status}`);
+      }
+
+      const aiText = data.text || '죄송합니다. 답변을 생성하지 못했습니다.';
+
       setMessages(prev => [...prev, {
         role: 'model',
         text: aiText,
@@ -95,7 +100,7 @@ const AIGuide: React.FC = () => {
       console.error(error);
       setMessages(prev => [...prev, {
         role: 'model',
-        text: `오류가 발생했습니다. (원인: ${error instanceof Error ? error.message : JSON.stringify(error)})\n\n관리자에게 이 메시지를 캡처해서 보내주세요.`,
+        text: `오류가 발생했습니다. (원인: ${error instanceof Error ? error.message : JSON.stringify(error)})\n\n서버 통신 중 문제가 발생했습니다.`,
         date: '오류 발생'
       }]);
     } finally {
