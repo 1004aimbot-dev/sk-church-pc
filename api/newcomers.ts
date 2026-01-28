@@ -52,10 +52,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ success: true });
         }
 
+        if (req.method === 'PUT') {
+            const { id, name, phone, birth_date, address, description } = req.body;
+
+            if (!id || !name) {
+                return res.status(400).json({ error: 'ID and Name are required' });
+            }
+
+            // id를 기준으로 업데이트
+            await sql`
+                UPDATE newcomers
+                SET name = ${name}, 
+                    phone = ${phone}, 
+                    birth_date = ${birth_date}, 
+                    address = ${address}, 
+                    description = ${description}
+                WHERE id = ${id}
+            `;
+            return res.status(200).json({ success: true });
+        }
+
+        if (req.method === 'DELETE') {
+            const { id } = req.query;
+
+            if (!id) {
+                return res.status(400).json({ error: 'ID is required' });
+            }
+
+            await sql`DELETE FROM newcomers WHERE id = ${id}`;
+            return res.status(200).json({ success: true });
+        }
+
         return res.status(405).json({ error: 'Method not allowed' });
     } catch (error) {
         console.error(error);
-        // 테이블이 없을 경우 에러가 발생할 수 있으니 안전장치
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
