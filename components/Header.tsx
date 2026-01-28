@@ -123,7 +123,7 @@ const Header: React.FC = () => {
 
             <button
               onClick={handleAdminClick}
-              className={`group relative overflow-hidden text-sm font-black px-3 xl:px-6 py-2 md:py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
+              className={`group relative overflow-hidden text-sm font-black px-3 2xl:px-6 py-2 md:py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
                 ? 'bg-white text-red-600 border-2 border-red-50 shadow-red-100 animate-in fade-in zoom-in-95'
                 : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
                 }`}
@@ -131,7 +131,7 @@ const Header: React.FC = () => {
               <span className="material-symbols-outlined text-xl transition-transform group-hover:rotate-12">
                 {isAdmin ? 'admin_panel_settings' : 'lock_open'}
               </span>
-              <span className="hidden xl:inline">{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
+              <span className="hidden 2xl:inline">{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
             </button>
           </div>
         </div>
