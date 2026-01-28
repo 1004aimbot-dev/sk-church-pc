@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai"; erative - ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // ... (interface definitions)
 
