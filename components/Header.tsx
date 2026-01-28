@@ -76,26 +76,27 @@ const Header: React.FC = () => {
       <header className={`sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b shadow-sm transition-all duration-300 ${isAdmin ? 'border-red-500 bg-red-50/30' : 'border-gray-100'}`}>
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
 
-          {/* Mobile Menu Button (Hamburger) */}
-          <button
-            className="lg:hidden p-2 text-slate-600 hover:text-blue-600 transition-colors"
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <span className="material-symbols-outlined text-3xl">menu</span>
-          </button>
+          {/* Left Container (Hamburger & Desktop Nav) */}
+          <div className="flex-1 flex items-center justify-start">
+            <button
+              className="lg:hidden p-2 text-slate-600 hover:text-blue-600 transition-colors"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <span className="material-symbols-outlined text-3xl">menu</span>
+            </button>
 
-          {/* Left Nav (Desktop) */}
-          <div className="flex-1 hidden lg:flex gap-6">
-            {navItems.slice(0, 4).map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-sm font-bold transition-all hover:text-blue-600 hover:scale-105 ${location.pathname === item.path ? 'text-blue-600' : 'text-slate-600'
-                  }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <div className="hidden lg:flex gap-6">
+              {navItems.slice(0, 4).map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`text-sm font-bold transition-all hover:text-blue-600 hover:scale-105 ${location.pathname === item.path ? 'text-blue-600' : 'text-slate-600'
+                    }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Center Logo */}
