@@ -18,6 +18,7 @@ description: 프로젝트 진행 중 발생한 문제점, 해결 과정, 교훈�
 2. **AI 연동 (Gemini)**: API Key 인증 실패, 모델(404) 오류, SDK(Node vs Client) 호환성 문제
 3. **데이터베이스**: Vercel Postgres 연결 오류, LocalStorage 전환 결정
 4. **프론트엔드**: 새가족 페이지 백지화(Crash), 빌드 타임 주입(Define) 문제
+5. **성능 최적화 (Performance)**: 모바일 환경 입력 지연(Lag), 대량 데이터 렌더링 최적화 (React.memo)
 
 ## 3. 리포트 생성 (작성 가이드)
 수집된 정보를 바탕으로 **`PROJECT_RETROSPECTIVE.md`** 파일을 생성합니다.
