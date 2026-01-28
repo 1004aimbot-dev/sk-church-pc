@@ -278,9 +278,9 @@ const OnlineWorship: React.FC = () => {
       const data = await response.json();
       setAiSummary(data.summary || '요약본을 생성하지 못했습니다.');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setAiSummary('AI 분석 엔진 연결에 실패했습니다. (서버 키 설정 확인 필요)');
+      setAiSummary(`오류가 발생했습니다: ${error.message || '서버 연결 실패'}`);
     } finally {
       setIsAnalyzing(false);
     }
