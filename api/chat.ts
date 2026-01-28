@@ -21,8 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const { prompt, systemInstruction } = req.body;
 
-        // 환경 변수 가져오기 (node:process 사용)
-        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY;
+        // 환경 변수 가져오기 (node:process 사용) 또는 헤더에서 직접 전달받기 (Emergency Bypass)
+        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || req.headers['x-gemini-api-key'];
 
         if (!apiKey) {
             // 모든 키 출력 (보안상 값은 제외)
