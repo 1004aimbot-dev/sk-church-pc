@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
+    "@google/generative-ai": "^0.24.1",
     "@vercel/node": "^5.5.28",
     "@vercel/postgres": "^0.10.0",
     "react": "^19.2.3",
