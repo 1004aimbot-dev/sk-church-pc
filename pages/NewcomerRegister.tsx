@@ -15,6 +15,7 @@ interface Newcomer {
 const NewcomerRegister: React.FC = () => {
     const { isAdmin } = useContext(AdminContext);
     const [newcomers, setNewcomers] = useState<Newcomer[]>([]);
+    const [editingId, setEditingId] = useState<number | null>(null); // 수정 중인 ID
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -59,22 +60,75 @@ const NewcomerRegister: React.FC = () => {
         }
 
         try {
-            const newItem: Newcomer = {
-                id: Date.now(),
-                ...form,
-                registration_date: new Date().toISOString()
-            };
+            let updatedList: Newcomer[];
 
-            const updatedList = [newItem, ...newcomers];
+            if (editingId) {
+                // 수정 모드: 기존 아이템 업데이트
+                updatedList = newcomers.map(item =>
+                    item.id === editingId
+                        ? { ...item, ...form }
+                        : item
+                );
+                alert("정보가 수정되었습니다.");
+                setEditingId(null);
+            } else {
+                // 등록 모드: 새 아이템 추가
+                const newItem: Newcomer = {
+                    id: Date.now(),
+                    ...form,
+                    registration_date: new Date().toISOString()
+                };
+                updatedList = [newItem, ...newcomers];
+                alert("새가족 등록이 완료되었습니다.");
+            }
+
             localStorage.setItem('sgch_newcomers', JSON.stringify(updatedList));
-
-            alert("새가족 등록이 완료되었습니다.");
             setForm({ name: '', phone: '', birth_date: '', address: '', description: '' });
             setNewcomers(updatedList);
         } catch (err) {
             console.error(err);
             alert("오류 발생 (브라우저 저장공간 확인 필요)");
         }
+    };
+
+    // 삭제 핸들러
+    const handleDelete = (id: number) => {
+        if (!window.confirm("정말로 삭제하시겠습니까?\n삭제된 정보는 복구할 수 없습니다.")) return;
+
+        try {
+            const updatedList = newcomers.filter(item => item.id !== id);
+            localStorage.setItem('sgch_newcomers', JSON.stringify(updatedList));
+            setNewcomers(updatedList);
+
+            // 만약 수정 중이던 항목을 삭제했다면 폼 초기화
+            if (editingId === id) {
+                setEditingId(null);
+                setForm({ name: '', phone: '', birth_date: '', address: '', description: '' });
+            }
+        } catch (err) {
+            console.error(err);
+            alert("삭제 중 오류가 발생했습니다.");
+        }
+    };
+
+    // 수정 핸들러 (폼에 데이터 채우기)
+    const handleEdit = (item: Newcomer) => {
+        setEditingId(item.id);
+        setForm({
+            name: item.name,
+            phone: item.phone,
+            birth_date: item.birth_date,
+            address: item.address,
+            description: item.description
+        });
+        // 폼 있는 곳으로 스크롤 이동 (모바일 배려)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 수정 취소
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setForm({ name: '', phone: '', birth_date: '', address: '', description: '' });
     };
 
     return (
@@ -86,11 +140,20 @@ const NewcomerRegister: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* 등록 폼 */}
-                <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-green-600">person_add</span>
-                        새가족 등록하기
+                {/* 등록/수정 폼 */}
+                <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 h-fit sticky top-24">
+                    <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className={`material-symbols-outlined ${editingId ? 'text-blue-600' : 'text-green-600'}`}>
+                                {editingId ? 'edit' : 'person_add'}
+                            </span>
+                            {editingId ? '정보 수정하기' : '새가족 등록하기'}
+                        </div>
+                        {editingId && (
+                            <button onClick={handleCancelEdit} className="text-xs text-slate-400 underline hover:text-slate-600">
+                                취소
+                            </button>
+                        )}
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
@@ -146,8 +209,14 @@ const NewcomerRegister: React.FC = () => {
                                 placeholder="특이사항이나 기도제목을 입력하세요."
                             />
                         </div>
-                        <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-100 mt-4">
-                            등록하기
+                        <button
+                            type="submit"
+                            className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg mt-4 text-white
+                                ${editingId
+                                    ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'
+                                    : 'bg-green-600 hover:bg-green-700 shadow-green-100'}`}
+                        >
+                            {editingId ? '수정 완료' : '등록하기'}
                         </button>
                     </form>
                 </div>
@@ -170,7 +239,9 @@ const NewcomerRegister: React.FC = () => {
                             </div>
                         ) : (
                             newcomers.map(person => (
-                                <div key={person.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 transition-colors group">
+                                <div key={person.id} className={`bg-white p-5 rounded-2xl shadow-sm border transition-colors group relative
+                                    ${editingId === person.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-100 hover:border-blue-200'}
+                                `}>
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">
                                             <h3 className="font-bold text-lg">{person.name}</h3>
@@ -178,9 +249,29 @@ const NewcomerRegister: React.FC = () => {
                                                 {newcomers.indexOf(person) === 0 ? 'N' : ''} {person.birth_date}
                                             </span>
                                         </div>
-                                        <span className="text-[10px] text-slate-400">
-                                            {new Date(person.registration_date).toLocaleDateString()}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-slate-400">
+                                                {new Date(person.registration_date).toLocaleDateString()}
+                                            </span>
+                                            {isAdmin && (
+                                                <div className="flex gap-1 ml-2">
+                                                    <button
+                                                        onClick={() => handleEdit(person)}
+                                                        className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                        title="수정"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(person.id)}
+                                                        className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                                        title="삭제"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {isAdmin ? (
@@ -207,5 +298,7 @@ const NewcomerRegister: React.FC = () => {
         </div>
     );
 };
+
+export default NewcomerRegister;
 
 export default NewcomerRegister;
