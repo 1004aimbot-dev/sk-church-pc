@@ -31,36 +31,36 @@ const Checklist: React.FC = () => {
 
   const today = new Date();
 
-  // 선택된 날짜가 변경될 때마다 해당 날짜의 데이터를 서버에서 불러옴
+  // 선택된 날짜가 변경될 때마다 해당 날짜의 데이터를 로컬 스토리지에서 불러옴
   useEffect(() => {
-    const dateKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    const dateKey = `sgch_qt_${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    const savedData = localStorage.getItem(dateKey);
 
-    fetch(`/api/qt?date=${dateKey}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          // DB에 데이터가 있는 경우
-          setCheckedItems(data.checkedItems || { bible: false, prayer: false, gratitude: false });
-          setPrayerTime(data.prayerTime || '30분');
-          setBibleText(data.bibleText || '');
-          setGratitudeTexts(data.gratitudeTexts || ['', '', '']);
-        } else {
-          // 데이터가 없는 날은 초기화
-          setCheckedItems({ bible: false, prayer: false, gratitude: false });
-          setPrayerTime('30분');
-          setBibleText('');
-          setGratitudeTexts(['', '', '']);
-        }
-      })
-      .catch(err => console.error("Failed to load qt record:", err));
+    if (savedData) {
+      try {
+        const data: DailyRecord = JSON.parse(savedData);
+        setCheckedItems(data.checkedItems || { bible: false, prayer: false, gratitude: false });
+        setPrayerTime(data.prayerTime || '30분');
+        setBibleText(data.bibleText || '');
+        setGratitudeTexts(data.gratitudeTexts || ['', '', '']);
+      } catch (e) {
+        console.error("Daten parse error", e);
+      }
+    } else {
+      // 데이터가 없는 날은 초기화
+      setCheckedItems({ bible: false, prayer: false, gratitude: false });
+      setPrayerTime('30분');
+      setBibleText('');
+      setGratitudeTexts(['', '', '']);
+    }
   }, [selectedDate]);
 
   const toggleItem = (key: keyof typeof checkedItems) => {
     setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSave = async () => {
-    const dateKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+  const handleSave = () => {
+    const dateKey = `sgch_qt_${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     const dataToSave: DailyRecord = {
       checkedItems,
       prayerTime,
@@ -69,21 +69,15 @@ const Checklist: React.FC = () => {
     };
 
     try {
-      const res = await fetch('/api/qt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date_key: dateKey, data: dataToSave })
-      });
+      localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
 
-      if (res.ok) {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      } else {
-        alert("저장에 실패했습니다.");
-      }
+      // 달력 갱신을 위해 이벤트 발생 (필요 시)
+      window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.error("Failed to save qt record:", err);
-      alert("서버 오류로 저장에 실패했습니다.");
+      alert("저장에 실패했습니다. (브라우저 용량 부족 등)");
     }
   };
 
