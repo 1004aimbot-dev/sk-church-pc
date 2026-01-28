@@ -78,7 +78,7 @@ const AIGuide: React.FC = () => {
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-1.5-flash',
         contents: userText,
         config: {
           systemInstruction: personalizedInstruction,
@@ -217,8 +217,8 @@ const AIGuide: React.FC = () => {
               </div>
               <div className="relative group">
                 <div className={`p-5 text-sm shadow-sm ${msg.role === 'model'
-                    ? 'bg-white rounded-3xl rounded-tl-none border border-gray-100 text-slate-800'
-                    : 'bg-blue-600 rounded-3xl rounded-tr-none text-white font-medium'
+                  ? 'bg-white rounded-3xl rounded-tl-none border border-gray-100 text-slate-800'
+                  : 'bg-blue-600 rounded-3xl rounded-tr-none text-white font-medium'
                   }`}>
                   <div className={`markdown-content ${msg.role === 'user' ? 'text-white' : ''}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
