@@ -92,7 +92,7 @@ const AIGuide: React.FC = () => {
       }
 
       if (!response.ok) {
-        throw new Error(data.error || `Server Error: ${response.status}`);
+        throw new Error((data.error || `Server Error: ${response.status}`) + (data.debug_info ? `\n\nVisible Env Keys: ${data.debug_info}` : ''));
       }
 
       const aiText = data.text || '죄송합니다. 답변을 생성하지 못했습니다.';
@@ -235,6 +235,15 @@ const AIGuide: React.FC = () => {
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {msg.text}
                     </ReactMarkdown>
+                    {/* Debug Info Display */}
+                    {msg.text.includes('오류가 발생했습니다') && msg.text.includes('Visible Env Keys') && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl">
+                        <p className="text-xs font-bold text-red-600 mb-1">🔍 디버깅 정보 (관리자 전달용)</p>
+                        <pre className="text-[10px] text-red-500 whitespace-pre-wrap font-mono leading-tight bg-red-100/50 p-2 rounded">
+                          {msg.text.split('Visible Env Keys:')[1] ? 'Key 목록: ' + msg.text.split('Visible Env Keys:')[1] : '상세 정보 없음'}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {msg.role === 'model' && (

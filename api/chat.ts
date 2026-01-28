@@ -1,6 +1,7 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import process from 'process';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS 설정
