@@ -210,87 +210,89 @@ const NewcomerRegister: React.FC = () => {
                 <p className="text-slate-500">교회에 새로 오신 분들을 소중히 기록하고 섬깁니다.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                {/* 등록/수정 폼 */}
-                <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 h-fit sticky top-24">
-                    <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className={`material-symbols-outlined ${editingId ? 'text-blue-600' : 'text-green-600'}`}>
-                                {editingId ? 'edit' : 'person_add'}
-                            </span>
-                            {editingId ? '정보 수정하기' : '새가족 등록하기'}
-                        </div>
-                        {editingId && (
-                            <button onClick={handleCancelEdit} className="text-xs text-slate-400 underline hover:text-slate-600">
-                                취소
+            <div className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-2' : 'max-w-3xl mx-auto'} gap-12`}>
+                {/* 등록/수정 폼 (관리자 전용) */}
+                {isAdmin && (
+                    <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 h-fit sticky top-24 transition-all animate-in fade-in slide-in-from-left-4">
+                        <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className={`material-symbols-outlined ${editingId ? 'text-blue-600' : 'text-green-600'}`}>
+                                    {editingId ? 'edit' : 'person_add'}
+                                </span>
+                                {editingId ? '정보 수정하기' : '새가족 등록하기'}
+                            </div>
+                            {editingId && (
+                                <button onClick={handleCancelEdit} className="text-xs text-slate-400 underline hover:text-slate-600">
+                                    취소
+                                </button>
+                            )}
+                        </h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">성함 *</label>
+                                <input
+                                    name="name"
+                                    value={form.name}
+                                    onChange={handleChange}
+                                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
+                                    placeholder="홍길동"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">연락처 *</label>
+                                <input
+                                    name="phone"
+                                    value={form.phone}
+                                    onChange={handleChange}
+                                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
+                                    placeholder="010-1234-5678"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">생년월일</label>
+                                    <input
+                                        name="birth_date"
+                                        value={form.birth_date}
+                                        onChange={handleChange}
+                                        className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
+                                        placeholder="1990-01-01"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">거주 지역</label>
+                                    <input
+                                        name="address"
+                                        value={form.address}
+                                        onChange={handleChange}
+                                        className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
+                                        placeholder="성남시 중원구"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1">비고 / 기도제목</label>
+                                <textarea
+                                    name="description"
+                                    value={form.description}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none resize-none"
+                                    placeholder="특이사항이나 기도제목을 입력하세요."
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg mt-4 text-white
+                                    ${editingId
+                                        ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'
+                                        : 'bg-green-600 hover:bg-green-700 shadow-green-100'}`}
+                            >
+                                {editingId ? '수정 완료' : '등록하기'}
                             </button>
-                        )}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">성함 *</label>
-                            <input
-                                name="name"
-                                value={form.name}
-                                onChange={handleChange}
-                                className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
-                                placeholder="홍길동"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">연락처 *</label>
-                            <input
-                                name="phone"
-                                value={form.phone}
-                                onChange={handleChange}
-                                className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
-                                placeholder="010-1234-5678"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">생년월일</label>
-                                <input
-                                    name="birth_date"
-                                    value={form.birth_date}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
-                                    placeholder="1990-01-01"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">거주 지역</label>
-                                <input
-                                    name="address"
-                                    value={form.address}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none"
-                                    placeholder="성남시 중원구"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1">비고 / 기도제목</label>
-                            <textarea
-                                name="description"
-                                value={form.description}
-                                onChange={handleChange}
-                                rows={3}
-                                className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-200 outline-none resize-none"
-                                placeholder="특이사항이나 기도제목을 입력하세요."
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg mt-4 text-white
-                                ${editingId
-                                    ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'
-                                    : 'bg-green-600 hover:bg-green-700 shadow-green-100'}`}
-                        >
-                            {editingId ? '수정 완료' : '등록하기'}
-                        </button>
-                    </form>
-                </div>
+                        </form>
+                    </div>
+                )}
 
                 {/* 목록 리스트 */}
                 <div className="space-y-6">
