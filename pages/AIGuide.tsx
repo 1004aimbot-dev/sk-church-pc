@@ -73,50 +73,51 @@ const AIGuide: React.FC = () => {
       3. 답변 중에 반드시 **"${userInfo.name || '성도'} ${userInfo.title}님"**이라고 호칭을 사용하여 따뜻한 유대감을 형성하십시오.
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
-      // API 라우트로 요청 전송
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-gemini-api-key': import.meta.env.VITE_GEMINI_API_KEY || ''
-        },
-        body: JSON.stringify({
-          prompt: userText,
-          systemInstruction: personalizedInstruction,
-        }),
+      // 클라이언트 사이드 직접 호출 (서버리스 우회)
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ''; // Vite 환경변수
+
+      if (!apiKey) {
+        throw new Error("API 키가 설정되지 않았습니다. (VITE_GEMINI_API_KEY)");
+      }
+
+      const client = new GoogleGenAI({ apiKey });
+      const model = 'gemini-2.5-flash'; // 최신 모델
+
+      const response = await client.models.generateContent({
+        model,
+        contents: [
+          { role: 'user', parts: [{ text: userText }] }
+        ],
+        config: {
+          systemInstruction: { parts: [{ text: personalizedInstruction }] },
+        }
       });
 
-      const responseText = await response.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        // JSON 파싱 실패 시 (HTML 에러 페이지 등일 경우)
-        throw new Error(`Invalid Response (Status: ${response.status}): ${responseText.slice(0, 100)}...`);
-      }
-
-      if (!response.ok) {
-        throw new Error((data.error || `Server Error: ${response.status}`) + (data.debug_info ? `\n\nVisible Env Keys: ${data.debug_info}` : ''));
-      }
-
-      const aiText = data.text || '죄송합니다. 답변을 생성하지 못했습니다.';
+      const responseText = response.text();
 
       setMessages(prev => [...prev, {
         role: 'model',
-        text: aiText,
+        text: responseText || '답변을 생성하지 못했습니다.',
         date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
       }]);
-    } catch (error) {
-      console.error(error);
-      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
-      const isKeyError = errorMessage.includes('API Key not found') || errorMessage.includes('API Key Missing');
+
+    } catch (error: any) {
+      console.error('AI Request Error:', error);
+      let errorMessage = "죄송합니다. 오류가 발생했습니다.";
+
+      if (error.message?.includes('API key')) {
+        errorMessage = "API 키 설정 오류입니다.";
+      } else if (error.message?.includes('404')) {
+        errorMessage = "AI 모델을 찾을 수 없습니다.";
+      } else {
+        errorMessage = error.message;
+      }
 
       setMessages(prev => [...prev, {
         role: 'model',
-        text: `오류가 발생했습니다.\n${isKeyError ? '🚨 API 키 설정 오류입니다. 관리자가 서버 코드를 직접 수정해야 합니다.' : errorMessage}`,
+        text: `오류가 발생했습니다.\n${errorMessage}`,
         date: '오류 발생',
-        isError: true,
-        isKeyError: isKeyError
+        isError: true
       }]);
     } finally {
       setIsLoading(false);
