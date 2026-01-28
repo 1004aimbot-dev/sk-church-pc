@@ -54,7 +54,8 @@ const PastorMessage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      // 실패 시 로컬스토리지 백업 확인 (혹시 모를 상황 대비) 아니면 기본값 유지
+      // 에러 발생 시 사용자에게 알림 (디버깅용)
+      // 실제 운영 시에는 제거하거나 조용히 처리해야 하지만 현재는 원인 파악이 중요함
     } finally {
       setIsLoading(false);
     }
@@ -85,14 +86,14 @@ const PastorMessage: React.FC = () => {
       if (res.ok) {
         alert('인사말이 서버에 저장되었습니다. 모든 사용자에게 반영됩니다.');
         setIsEditing(false);
-        // 저장 후 다시 불러와서 확실하게 동기화
         fetchProfile();
       } else {
-        throw new Error('저장 실패');
+        const errText = await res.text();
+        throw new Error(`저장 실패: ${res.status} ${errText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save failed:', error);
-      alert('저장에 실패했습니다. 네트워크 상태를 확인해주세요.');
+      alert(`저장에 실패했습니다.\n오류 내용: ${error.message}`);
     }
   };
 
