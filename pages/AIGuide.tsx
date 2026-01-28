@@ -18,10 +18,10 @@ const AIGuide: React.FC = () => {
   });
 
   const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'model', 
-      text: '안녕하세요! 성남신광교회 성도님, 주님의 평안이 함께하시길 빕니다. 저는 여러분의 신앙 여정을 돕는 **AI 성경 길잡이**입니다.\n\n오늘은 어떤 고민이나 기도가 있으신가요? 말씀 묵상이나 신앙에 대한 궁금증이 있다면 무엇이든 물어보세요.', 
-      date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) 
+    {
+      role: 'model',
+      text: '안녕하세요! 성남신광교회 성도님, 주님의 평안이 함께하시길 빕니다. 저는 여러분의 신앙 여정을 돕는 **AI 성경 길잡이**입니다.\n\n오늘은 어떤 고민이나 기도가 있으신가요? 말씀 묵상이나 신앙에 대한 궁금증이 있다면 무엇이든 물어보세요.',
+      date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [input, setInput] = useState('');
@@ -53,17 +53,21 @@ const AIGuide: React.FC = () => {
     if (!userText.trim() || isLoading) return;
 
     if (!overrideInput) setInput('');
-    
-    setMessages(prev => [...prev, { 
-      role: 'user', 
-      text: userText, 
-      date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) 
+
+    setMessages(prev => [...prev, {
+      role: 'user',
+      text: userText,
+      date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
     }]);
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("API Key가 설정되지 않았습니다.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
+
       const personalizedInstruction = `당신은 성남신광교회 성도들을 돕는 자상하고 지혜로운 "AI 성경 길잡이"입니다. 
       사용자 정보 - 이름: ${userInfo.name || '미설정'}, 직분: ${userInfo.title}
 
@@ -82,17 +86,17 @@ const AIGuide: React.FC = () => {
       });
 
       const aiText = response.text || '죄송합니다. 말씀을 찾는 중에 잠시 문제가 생겼습니다. 다시 말씀해 주시겠어요?';
-      setMessages(prev => [...prev, { 
-        role: 'model', 
-        text: aiText, 
-        date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) 
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: aiText,
+        date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
       }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { 
-        role: 'model', 
-        text: '주님 안에서 답변을 준비하던 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.', 
-        date: '방금 전' 
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: '주님 안에서 답변을 준비하던 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+        date: '방금 전'
       }]);
     } finally {
       setIsLoading(false);
@@ -122,10 +126,10 @@ const AIGuide: React.FC = () => {
   // 날짜별로 추천 질문을 다르게 생성하는 로직
   const getDailyChips = () => {
     const day = new Date().getDate();
-    
+
     // 1번 칩: 고정
     const chip1 = { label: '오늘의 말씀', query: '성도님에게 오늘 꼭 필요한 위로와 소망의 성경 구절 하나를 들려주세요.' };
-    
+
     // 2번 칩 풀 (믿음/성장)
     const chip2Pool = [
       { label: '믿음을 주세요', query: '지금 저에게 더 큰 믿음이 필요합니다. 제 영혼을 깨우는 말씀을 들려주세요.' },
@@ -171,10 +175,10 @@ const AIGuide: React.FC = () => {
             <p className="text-xs text-slate-400 font-medium tracking-tight">하나님의 말씀을 나눕니다</p>
           </div>
         </div>
-        
+
         {/* User Info Inputs */}
         <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-100 shadow-inner">
-          <input 
+          <input
             type="text"
             value={userInfo.name}
             onChange={handleNameChange}
@@ -182,7 +186,7 @@ const AIGuide: React.FC = () => {
             className="w-24 bg-white border-none rounded-xl text-xs font-bold px-3 py-2.5 focus:ring-1 focus:ring-blue-100 outline-none placeholder:text-slate-300 shadow-sm"
           />
           <div className="h-4 w-px bg-gray-200"></div>
-          <select 
+          <select
             value={userInfo.title}
             onChange={handleTitleChange}
             className="bg-transparent border-none text-xs font-bold text-blue-600 px-2 py-2 cursor-pointer focus:ring-0 outline-none"
@@ -212,11 +216,10 @@ const AIGuide: React.FC = () => {
                 <span className="text-[10px] text-slate-300">{msg.date}</span>
               </div>
               <div className="relative group">
-                <div className={`p-5 text-sm shadow-sm ${
-                  msg.role === 'model' 
-                    ? 'bg-white rounded-3xl rounded-tl-none border border-gray-100 text-slate-800' 
+                <div className={`p-5 text-sm shadow-sm ${msg.role === 'model'
+                    ? 'bg-white rounded-3xl rounded-tl-none border border-gray-100 text-slate-800'
                     : 'bg-blue-600 rounded-3xl rounded-tr-none text-white font-medium'
-                }`}>
+                  }`}>
                   <div className={`markdown-content ${msg.role === 'user' ? 'text-white' : ''}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {msg.text}
@@ -225,7 +228,7 @@ const AIGuide: React.FC = () => {
                 </div>
                 {msg.role === 'model' && (
                   <div className="flex justify-end gap-3 mt-1.5 px-2">
-                    <button 
+                    <button
                       onClick={() => copyToClipboard(msg.text)}
                       className="p-1 text-slate-300 hover:text-blue-600 transition-colors flex items-center gap-1 text-[10px] font-bold"
                       title="텍스트 복사"
@@ -233,7 +236,7 @@ const AIGuide: React.FC = () => {
                       <span className="material-symbols-outlined text-sm">content_copy</span>
                       복사하기
                     </button>
-                    <button 
+                    <button
                       onClick={() => setSharingIndex(sharingIndex === i ? null : i)}
                       className="p-1 text-slate-300 hover:text-blue-600 transition-colors flex items-center gap-1 text-[10px] font-bold"
                     >
@@ -258,14 +261,14 @@ const AIGuide: React.FC = () => {
         ))}
         {isLoading && (
           <div className="flex gap-3">
-             <div className="size-10 rounded-full bg-white border border-gray-100 flex-shrink-0 overflow-hidden shadow-sm">
-                <img src="https://raw.githubusercontent.com/1004aimbot-dev/images/main/leehy.png" alt="AI Bible Guide" />
-              </div>
-              <div className="p-4 bg-white rounded-3xl rounded-tl-none border border-gray-100 flex gap-1 items-center shadow-sm">
-                <div className="size-1.5 bg-blue-300 rounded-full animate-bounce"></div>
-                <div className="size-1.5 bg-blue-300 rounded-full animate-bounce delay-75"></div>
-                <div className="size-1.5 bg-blue-300 rounded-full animate-bounce delay-150"></div>
-              </div>
+            <div className="size-10 rounded-full bg-white border border-gray-100 flex-shrink-0 overflow-hidden shadow-sm">
+              <img src="https://raw.githubusercontent.com/1004aimbot-dev/images/main/leehy.png" alt="AI Bible Guide" />
+            </div>
+            <div className="p-4 bg-white rounded-3xl rounded-tl-none border border-gray-100 flex gap-1 items-center shadow-sm">
+              <div className="size-1.5 bg-blue-300 rounded-full animate-bounce"></div>
+              <div className="size-1.5 bg-blue-300 rounded-full animate-bounce delay-75"></div>
+              <div className="size-1.5 bg-blue-300 rounded-full animate-bounce delay-150"></div>
+            </div>
           </div>
         )}
       </div>
@@ -274,26 +277,26 @@ const AIGuide: React.FC = () => {
       <div className="bg-white p-6 border-t border-gray-50 rounded-b-[2.5rem] shadow-sm space-y-5 relative z-20">
         <div className="flex justify-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {dailyChips.map(chip => (
-             <button 
-                key={chip.label} 
-                onClick={() => handleChipClick(chip.query)} 
-                className="whitespace-nowrap px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50/30 transition-all active:scale-95 shadow-sm"
-              >
-               {chip.label}
-             </button>
+            <button
+              key={chip.label}
+              onClick={() => handleChipClick(chip.query)}
+              className="whitespace-nowrap px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50/30 transition-all active:scale-95 shadow-sm"
+            >
+              {chip.label}
+            </button>
           ))}
         </div>
         <div className="flex gap-3 items-end">
           <div className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl flex items-center p-1 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-            <input 
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4 px-4 outline-none" 
+            <input
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4 px-4 outline-none"
               placeholder="궁금한 신앙 질문을 입력하세요..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             />
           </div>
-          <button 
+          <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
             className="size-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all disabled:bg-slate-200"
