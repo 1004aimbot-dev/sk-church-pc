@@ -24,10 +24,22 @@ const NewcomerRegister: React.FC = () => {
     });
 
     const fetchNewcomers = () => {
-        fetch('/api/newcomers')
-            .then(res => res.json())
-            .then(data => setNewcomers(data))
-            .catch(err => console.error(err));
+        try {
+            const saved = localStorage.getItem('sgch_newcomers');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    setNewcomers(parsed);
+                } else {
+                    setNewcomers([]);
+                }
+            } else {
+                setNewcomers([]);
+            }
+        } catch (err) {
+            console.error(err);
+            setNewcomers([]);
+        }
     };
 
     useEffect(() => {
@@ -39,7 +51,7 @@ const NewcomerRegister: React.FC = () => {
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name || !form.phone) {
             alert("이름과 연락처는 필수항목입니다.");
@@ -47,22 +59,21 @@ const NewcomerRegister: React.FC = () => {
         }
 
         try {
-            const res = await fetch('/api/newcomers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form)
-            });
+            const newItem: Newcomer = {
+                id: Date.now(),
+                ...form,
+                registration_date: new Date().toISOString()
+            };
 
-            if (res.ok) {
-                alert("새가족 등록이 완료되었습니다.");
-                setForm({ name: '', phone: '', birth_date: '', address: '', description: '' });
-                fetchNewcomers(); // 목록 갱신
-            } else {
-                alert("등록 실패");
-            }
+            const updatedList = [newItem, ...newcomers];
+            localStorage.setItem('sgch_newcomers', JSON.stringify(updatedList));
+
+            alert("새가족 등록이 완료되었습니다.");
+            setForm({ name: '', phone: '', birth_date: '', address: '', description: '' });
+            setNewcomers(updatedList);
         } catch (err) {
             console.error(err);
-            alert("오류 발생");
+            alert("오류 발생 (브라우저 저장공간 확인 필요)");
         }
     };
 
