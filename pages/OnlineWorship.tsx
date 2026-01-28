@@ -729,6 +729,18 @@ const OnlineWorship: React.FC = () => {
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiSummary}</ReactMarkdown>
               </div>
             )}
+
+            {!isAnalyzing && aiSummary && (
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => copyToClipboard(aiSummary)}
+                  className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-colors shadow-lg active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-lg">content_copy</span>
+                  내용 복사하기
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
