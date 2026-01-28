@@ -124,13 +124,13 @@ const Header: React.FC = () => {
 
             <button
               onClick={handleAdminClick}
-              className={`group relative overflow-hidden text-sm font-black px-3 py-2 md:py-2.5 rounded-full transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${isAdmin
+              className={`group relative overflow-hidden rounded-full transition-all flex items-center justify-center shadow-lg active:scale-95 size-9 ${isAdmin
                 ? 'bg-white text-red-600 border-2 border-red-50 shadow-red-100 animate-in fade-in zoom-in-95'
                 : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
                 }`}
               title={isAdmin ? '관리자 종료' : '관리자 접속'}
             >
-              <span className="material-symbols-outlined text-xl transition-transform group-hover:rotate-12">
+              <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-12">
                 {isAdmin ? 'admin_panel_settings' : 'lock_open'}
               </span>
             </button>
