@@ -37,42 +37,20 @@ const PastorMessage: React.FC = () => {
   const [profile, setProfile] = useState<PastorProfile>(DEFAULT_PROFILE);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // 디버깅용 상태
-  const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
-
   // 서버에서 데이터 불러오기
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
-      setDebugInfo('Fetching from /api/content...');
-
-      // API 호출 (Vercel Serverless Function)
       const res = await fetch('/api/content');
-      setDebugInfo(`Fetch Status: ${res.status} ${res.statusText}`);
-
       if (res.ok) {
         const data = await res.json();
-        setDebugInfo(prev => `${prev}\nData Keys: ${Object.keys(data).join(', ')}`);
-
-        // 'pastor_profile' 키가 있으면 파싱해서 적용
         if (data.pastor_profile) {
-          try {
-            const parsed = JSON.parse(data.pastor_profile);
-            setProfile(prev => ({ ...prev, ...parsed }));
-            setDebugInfo(prev => `${prev}\nProfile Loaded: Success (${data.pastor_profile.length} chars)`);
-          } catch (parseError) {
-            setDebugInfo(prev => `${prev}\nParse Error: ${parseError}`);
-          }
-        } else {
-          setDebugInfo(prev => `${prev}\nNo 'pastor_profile' key found.`);
+          const parsed = JSON.parse(data.pastor_profile);
+          setProfile(prev => ({ ...prev, ...parsed }));
         }
-      } else {
-        const errText = await res.text();
-        setDebugInfo(prev => `${prev}\nError Body: ${errText}`);
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      setDebugInfo(`Fetch Error: ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -83,16 +61,50 @@ const PastorMessage: React.FC = () => {
     fetchProfile();
   }, []);
 
-  // ... (중략)
+  // 관리자 모드가 꺼지면 편집 모드도 종료
+  useEffect(() => {
+    if (!isAdmin) setIsEditing(false);
+  }, [isAdmin]);
+
+  const handleCreate = async () => {
+    try {
+      // 서버에 저장
+      const res = await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'pastor_profile',
+          value: JSON.stringify(profile)
+        })
+      });
+
+      if (res.ok) {
+        alert('인사말이 서버에 저장되었습니다. 모든 사용자에게 반영됩니다.');
+        setIsEditing(false);
+        fetchProfile();
+      } else {
+        const errText = await res.text();
+        throw new Error(`저장 실패: ${res.status} ${errText}`);
+      }
+    } catch (error: any) {
+      console.error('Save failed:', error);
+      alert(`저장에 실패했습니다.\n오류 내용: ${error.message}`);
+    }
+  };
+
+  const handleReset = () => {
+    if (window.confirm('정말로 초기 값으로 되돌리시겠습니까? 저장하지 않으면 반영되지 않습니다.')) {
+      setProfile(DEFAULT_PROFILE);
+    }
+  }
+
+  // 입력 핸들러
+  const handleChange = (field: keyof PastorProfile, value: string) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-12 relative">
-      {/* DEBUG PANEL (임시) */}
-      <div className="bg-black/80 text-green-400 p-4 rounded-xl text-xs font-mono whitespace-pre-wrap mb-4 cursor-pointer" onClick={() => fetchProfile()}>
-        <p className="font-bold border-b border-green-800 pb-2 mb-2">DEBUG INFO (Click to Refresh)</p>
-        {debugInfo}
-      </div>
-
       {/* Admin Controls */}
       {isAdmin && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 animate-in slide-in-from-bottom-4">
