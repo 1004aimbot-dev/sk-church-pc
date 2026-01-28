@@ -272,7 +272,7 @@ const OnlineWorship: React.FC = () => {
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Server Error');
+        throw new Error(err.details || err.error || 'Server Error');
       }
 
       const data = await response.json();
