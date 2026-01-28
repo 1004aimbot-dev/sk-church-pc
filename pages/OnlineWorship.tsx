@@ -196,7 +196,22 @@ const OnlineWorship: React.FC = () => {
     e.preventDefault();
     const startSec = timeStringToSeconds(formData.startTime);
     const endSec = timeStringToSeconds(formData.endTime);
-    const sermonToSave: Sermon = { ...(editingSermon || { id: Date.now() }), ...formData, startTime: startSec, endTime: endSec };
+
+    // 유튜브 썸네일 자동 추출
+    let thumbnailToSave = formData.thumbnail;
+    const videoId = extractVideoId(formData.youtubeUrl);
+    if (videoId) {
+      thumbnailToSave = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+
+    const sermonToSave: Sermon = {
+      ...(editingSermon || { id: Date.now() }),
+      ...formData,
+      startTime: startSec,
+      endTime: endSec,
+      thumbnail: thumbnailToSave
+    };
+
     if (editingSermon) {
       setSermons(sermons.map(s => s.id === editingSermon.id ? sermonToSave : s));
       if (activeSermon.id === editingSermon.id) setActiveSermon(sermonToSave);
