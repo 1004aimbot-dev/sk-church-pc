@@ -25,8 +25,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            console.error('SERVER: API Key Missing in Environment Variables');
-            return res.status(500).json({ error: 'Server Build Error: API Key not found in environment variables.' });
+            // 디버깅을 위해 'GEMINI'나 'API'가 포함된 키 이름만 노출 (보안상 값은 노출 금지)
+            const debugKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('GEMINI') || k.toUpperCase().includes('VITE') || k.toUpperCase().includes('KEY'));
+            console.error('SERVER: API Key Missing. Available Keys:', debugKeys);
+            return res.status(500).json({
+                error: `Server Build Error: API Key not found.`,
+                debug_info: `Visible Env Keys: ${debugKeys.join(', ') || 'NONE'}`
+            });
         }
 
         const ai = new GoogleGenAI({ apiKey });
