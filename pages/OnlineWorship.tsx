@@ -514,7 +514,7 @@ const OnlineWorship: React.FC = () => {
                     value={formData.endTime}
                     onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                     onBlur={(e) => setFormData({ ...formData, endTime: normalizeTimeString(e.target.value) })}
-                    onChange={e => setFormData({ ...formData, endTime: normalizeTimeString(e.target.value) })}
+
                   />
                 </div>
               </div>
