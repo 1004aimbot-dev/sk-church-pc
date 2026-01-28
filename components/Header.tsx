@@ -7,10 +7,21 @@ const Header: React.FC = () => {
   const location = useLocation();
   const { isAdmin, setIsAdmin } = useContext(AdminContext);
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [loginError, setLoginError] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // 모바일 메뉴 열려있을 때 스크롤 방지
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMobileMenuOpen]);
+
+  // 페이지 이동 시 모바일 메뉴 닫기
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const navItems = [
     { label: '교회소개', path: '/pastor-message' },
@@ -58,7 +69,16 @@ const Header: React.FC = () => {
     <>
       <header className={`sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b shadow-sm transition-all duration-300 ${isAdmin ? 'border-red-500 bg-red-50/30' : 'border-gray-100'}`}>
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          {/* Left Nav */}
+
+          {/* Mobile Menu Button (Hamburger) */}
+          <button
+            className="lg:hidden p-2 text-slate-600 hover:text-blue-600 transition-colors"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <span className="material-symbols-outlined text-3xl">menu</span>
+          </button>
+
+          {/* Left Nav (Desktop) */}
           <div className="flex-1 hidden lg:flex gap-6">
             {navItems.slice(0, 4).map((item) => (
               <Link
@@ -73,10 +93,10 @@ const Header: React.FC = () => {
           </div>
 
           {/* Center Logo */}
-          <Link to="/" className="flex items-center gap-3 px-8 text-center group">
+          <Link to="/" className="flex items-center gap-3 px-2 lg:px-8 text-center group">
             <div className="flex flex-col items-center transition-transform group-hover:scale-110">
-              <span className={`material-symbols-outlined text-4xl transition-colors duration-500 ${isAdmin ? 'text-red-600 animate-pulse' : 'text-blue-600'}`}>church</span>
-              <h1 className="font-myeongjo text-2xl font-extrabold tracking-tight text-slate-900">성남신광교회</h1>
+              <span className={`material-symbols-outlined text-3xl md:text-4xl transition-colors duration-500 ${isAdmin ? 'text-red-600 animate-pulse' : 'text-blue-600'}`}>church</span>
+              <h1 className="font-myeongjo text-xl md:text-2xl font-extrabold tracking-tight text-slate-900">성남신광교회</h1>
             </div>
           </Link>
 
@@ -97,19 +117,59 @@ const Header: React.FC = () => {
 
             <button
               onClick={handleAdminClick}
-              className={`group relative overflow-hidden text-sm font-black px-6 py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
-                  ? 'bg-red-600 text-white shadow-red-200 ring-4 ring-red-100 animate-in fade-in zoom-in-95'
-                  : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
+              className={`group relative overflow-hidden text-sm font-black px-3 md:px-6 py-2 md:py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
+                ? 'bg-red-600 text-white shadow-red-200 ring-4 ring-red-100 animate-in fade-in zoom-in-95'
+                : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
                 }`}
             >
               <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-12">
                 {isAdmin ? 'admin_panel_settings' : 'lock_open'}
               </span>
-              <span>{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
+              <span className="hidden md:inline">{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-left duration-300 flex flex-col">
+          <div className="h-20 px-4 flex items-center justify-between border-b border-gray-100">
+            <h2 className="font-myeongjo text-2xl font-black text-slate-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600">church</span> 성남신광교회
+            </h2>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
+            >
+              <span className="material-symbols-outlined text-3xl">close</span>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-6 px-4">
+            <nav className="flex flex-col gap-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`p-4 rounded-2xl text-lg font-bold flex items-center justify-between transition-all ${location.pathname === item.path
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-slate-600 hover:bg-gray-50'
+                    }`}
+                >
+                  {item.label}
+                  <span className="material-symbols-outlined text-slate-300">chevron_right</span>
+                </Link>
+              ))}
+            </nav>
+
+            <div className="mt-8 p-6 bg-slate-50 rounded-3xl text-center">
+              <p className="text-sm text-slate-500 font-medium mb-1">성남시 중원구 둔촌대로 148</p>
+              <p className="text-xs text-slate-400">© 2026 Seongnam Shinkwang Church</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Login Modal */}
       {isLoginModalOpen && (
