@@ -71,7 +71,6 @@ const AIGuide: React.FC = () => {
       3. 답변 중에 반드시 **"${userInfo.name || '성도'} ${userInfo.title}님"**이라고 호칭을 사용하여 따뜻한 유대감을 형성하십시오.
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
-      // API 라우트로 요청 전송 (프론트엔드 키 노출 없이 안전하게 실행)
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -83,7 +82,14 @@ const AIGuide: React.FC = () => {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        // JSON 파싱 실패 시 (HTML 에러 페이지 등일 경우)
+        throw new Error(`Invalid Response (Status: ${response.status}): ${responseText.slice(0, 100)}...`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || `Server Error: ${response.status}`);
