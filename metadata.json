@@ -1,0 +1,8 @@
+{
+  "name": "성남신광교회 (Seongnam Shinkwang Church)",
+  "description": "성남신광교회의 예배 안내, 은혜 나눔, 온라인 예배, AI 성경 길잡이 및 신앙 생활 점검을 제공하는 통합 웹 애플리케이션입니다.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
