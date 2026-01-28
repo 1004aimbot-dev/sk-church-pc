@@ -117,15 +117,15 @@ const Header: React.FC = () => {
 
             <button
               onClick={handleAdminClick}
-              className={`group relative overflow-hidden text-sm font-black px-3 md:px-6 py-2 md:py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
-                ? 'bg-red-600 text-white shadow-red-200 ring-4 ring-red-100 animate-in fade-in zoom-in-95'
+              className={`group relative overflow-hidden text-sm font-black px-3 lg:px-6 py-2 md:py-2.5 rounded-full transition-all flex items-center gap-2 shadow-lg active:scale-95 ${isAdmin
+                ? 'bg-white text-red-600 border-2 border-red-50 shadow-red-100 animate-in fade-in zoom-in-95'
                 : 'bg-slate-900 text-white hover:bg-blue-600 shadow-slate-200'
                 }`}
             >
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:rotate-12">
+              <span className="material-symbols-outlined text-xl transition-transform group-hover:rotate-12">
                 {isAdmin ? 'admin_panel_settings' : 'lock_open'}
               </span>
-              <span className="hidden md:inline">{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
+              <span className="hidden lg:inline">{isAdmin ? 'ADMIN EXIT' : '관리자 접속'}</span>
             </button>
           </div>
         </div>
@@ -153,8 +153,8 @@ const Header: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   className={`p-4 rounded-2xl text-lg font-bold flex items-center justify-between transition-all ${location.pathname === item.path
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-slate-600 hover:bg-gray-50'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-600 hover:bg-gray-50'
                     }`}
                 >
                   {item.label}
