@@ -164,23 +164,51 @@ const OnlineWorship: React.FC = () => {
     setIsOfferingAdminModalOpen(true);
   };
 
-  const handleSaveAccount = (e: React.FormEvent) => {
+  const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    let updatedAccounts = offeringAccounts;
+
     if (accountFormData.id === 0) {
       const newAccount = { ...accountFormData, id: Date.now() };
-      setOfferingAccounts([...offeringAccounts, newAccount]);
-      showToast('새 계좌 정보가 추가되었습니다.');
+      updatedAccounts = [...offeringAccounts, newAccount];
     } else {
-      setOfferingAccounts(offeringAccounts.map(a => a.id === accountFormData.id ? accountFormData : a));
-      showToast('계좌 정보가 수정되었습니다.');
+      updatedAccounts = offeringAccounts.map(a => a.id === accountFormData.id ? accountFormData : a);
     }
+    setOfferingAccounts(updatedAccounts);
+
+    // DB 저장
+    try {
+      await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'offering_accounts', value: JSON.stringify(updatedAccounts) })
+      });
+      showToast(accountFormData.id === 0 ? '새 계좌 정보가 추가되었습니다.' : '계좌 정보가 수정되었습니다.');
+    } catch (err) {
+      console.error(err);
+      showToast('저장 실패');
+    }
+
     setAccountFormData({ id: 0, bankName: '', accountNumber: '', accountHolder: '성남신광교회' });
   };
 
-  const handleDeleteAccount = (id: number) => {
+  const handleDeleteAccount = async (id: number) => {
     if (window.confirm('이 계좌 정보를 삭제하시겠습니까?')) {
-      setOfferingAccounts(offeringAccounts.filter(a => a.id !== id));
-      showToast('계좌가 삭제되었습니다.');
+      const updatedAccounts = offeringAccounts.filter(a => a.id !== id);
+      setOfferingAccounts(updatedAccounts);
+
+      // DB 저장
+      try {
+        await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'offering_accounts', value: JSON.stringify(updatedAccounts) })
+        });
+        showToast('계좌가 삭제되었습니다.');
+      } catch (err) {
+        console.error(err);
+        showToast('삭제 실패');
+      }
     }
   };
 
@@ -229,7 +257,7 @@ const OnlineWorship: React.FC = () => {
     setFormData(prev => ({ ...prev, thumbnail: getRandomImage() }));
   };
 
-  const handleSaveSermon = (e: React.FormEvent) => {
+  const handleSaveSermon = async (e: React.FormEvent) => {
     e.preventDefault();
     const startSec = timeStringToSeconds(formData.startTime);
     const endSec = timeStringToSeconds(formData.endTime);
@@ -249,25 +277,53 @@ const OnlineWorship: React.FC = () => {
       thumbnail: thumbnailToSave
     };
 
+    let updatedSermons = sermons;
+
     if (editingSermon) {
-      setSermons(sermons.map(s => s.id === editingSermon.id ? sermonToSave : s));
+      updatedSermons = sermons.map(s => s.id === editingSermon.id ? sermonToSave : s);
+      setSermons(updatedSermons);
       if (activeSermon.id === editingSermon.id) setActiveSermon(sermonToSave);
     } else {
-      setSermons([sermonToSave, ...sermons]);
+      updatedSermons = [sermonToSave, ...sermons];
+      setSermons(updatedSermons);
     }
+
+    // DB 저장
+    try {
+      await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'sermons_list', value: JSON.stringify(updatedSermons) })
+      });
+      showToast('저장되었습니다.');
+    } catch (err) {
+      console.error(err);
+      showToast('저장 실패');
+    }
+
     setIsSermonModalOpen(false);
-    showToast('저장되었습니다.');
   };
 
-  // Fix: Added missing handleDeleteSermon function
-  const handleDeleteSermon = (id: number) => {
+  const handleDeleteSermon = async (id: number) => {
     if (window.confirm('이 설교 영상을 삭제하시겠습니까?')) {
       const filtered = sermons.filter(s => s.id !== id);
       setSermons(filtered);
       if (activeSermon.id === id && filtered.length > 0) {
         setActiveSermon(filtered[0]);
       }
-      showToast('설교가 삭제되었습니다.');
+
+      // DB 저장
+      try {
+        await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'sermons_list', value: JSON.stringify(filtered) })
+        });
+        showToast('설교가 삭제되었습니다.');
+      } catch (err) {
+        console.error(err);
+        showToast('삭제 실패');
+      }
     }
   };
 

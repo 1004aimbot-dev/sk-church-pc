@@ -16,25 +16,41 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    // 로컬 스토리지에서 콘텐츠 불러오기
-    const savedContent = localStorage.getItem('sgch_home_content');
-    if (savedContent) {
+    // DB 데이터 로드
+    const fetchContent = async () => {
       try {
-        setContent(prev => ({ ...prev, ...JSON.parse(savedContent) }));
-      } catch (e) {
-        console.error("Failed to parse local content", e);
+        const res = await fetch('/api/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.home_content) {
+            setContent(prev => ({ ...prev, ...JSON.parse(data.home_content) }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch home content", err);
       }
-    }
+    };
+    fetchContent();
   }, []);
 
-  const handleEdit = (key: string, label: string) => {
+  const handleEdit = async (key: string, label: string) => {
     const newValue = prompt(`${label} 수정:`, content[key as keyof typeof content]);
     if (newValue !== null) {
       const updatedContent = { ...content, [key]: newValue };
       setContent(updatedContent); // UI 즉시 반영
 
-      // 로컬 스토리지 저장
-      localStorage.setItem('sgch_home_content', JSON.stringify(updatedContent));
+      // DB 저장
+      try {
+        await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: 'home_content', value: JSON.stringify(updatedContent) })
+        });
+        alert('저장되었습니다.');
+      } catch (err) {
+        console.error(err);
+        alert('저장 실패 (네트워크 오류)');
+      }
     }
   };
 

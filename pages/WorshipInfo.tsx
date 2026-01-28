@@ -13,29 +13,23 @@ interface WorshipRow {
 const WorshipInfo: React.FC = () => {
   const { isAdmin } = useContext(AdminContext);
 
-  // 일반 예배 데이터 (이미지 기반)
-  const [generalWorship, setGeneralWorship] = useState<WorshipRow[]>(() => {
-    const saved = localStorage.getItem('sgch_general_worship_v2');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: '주일오전1부예배', place: '본당', time: '오전 9시' },
-      { id: 2, name: '주일오전2부예배', place: '본당', time: '오전 11시' },
-      { id: 3, name: '주일오후찬양예배', place: '본당', time: '오후 2시' },
-      { id: 4, name: '수요예배', place: '본당', time: '오후 7시' },
-      { id: 5, name: '금요성령집회', place: '본당', time: '오후 8시' },
-      { id: 6, name: '새벽기도회', place: '비전센터 2층', time: '오전 5시(월~토)' },
-    ];
-  });
+  // 일반 예배 데이터
+  const [generalWorship, setGeneralWorship] = useState<WorshipRow[]>([
+    { id: 1, name: '주일오전1부예배', place: '본당', time: '오전 9시' },
+    { id: 2, name: '주일오전2부예배', place: '본당', time: '오전 11시' },
+    { id: 3, name: '주일오후찬양예배', place: '본당', time: '오후 2시' },
+    { id: 4, name: '수요예배', place: '본당', time: '오후 7시' },
+    { id: 5, name: '금요성령집회', place: '본당', time: '오후 8시' },
+    { id: 6, name: '새벽기도회', place: '비전센터 2층', time: '오전 5시(월~토)' },
+  ]);
 
-  // 교회학교 데이터 (이미지 기반)
-  const [schoolWorship, setSchoolWorship] = useState<WorshipRow[]>(() => {
-    const saved = localStorage.getItem('sgch_school_worship_v2');
-    return saved ? JSON.parse(saved) : [
-      { id: 101, name: '영유아유치부', place: '비전센터 2층', time: '주일 오전 11시', teacher: '민진홍 교육전도사' },
-      { id: 102, name: '초등부', place: '비전센터 3층', time: '주일 오전 11시', teacher: '박종우 교육전도사' },
-      { id: 103, name: '청소년부', place: '비전센터 4층', time: '주일 오전 11시', teacher: '오정신 교육전도사' },
-      { id: 104, name: '청년부', place: '비전센터 2층', time: '주일 오후 2시', teacher: '최찬규 목사' },
-    ];
-  });
+  // 교회학교 데이터
+  const [schoolWorship, setSchoolWorship] = useState<WorshipRow[]>([
+    { id: 101, name: '영유아유치부', place: '비전센터 2층', time: '주일 오전 11시', teacher: '민진홍 교육전도사' },
+    { id: 102, name: '초등부', place: '비전센터 3층', time: '주일 오전 11시', teacher: '박종우 교육전도사' },
+    { id: 103, name: '청소년부', place: '비전센터 4층', time: '주일 오전 11시', teacher: '오정신 교육전도사' },
+    { id: 104, name: '청년부', place: '비전센터 2층', time: '주일 오후 2시', teacher: '최찬규 목사' },
+  ]);
 
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,10 +38,22 @@ const WorshipInfo: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', time: '', place: '', teacher: '' });
   const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' });
 
+  // DB 데이터 로드
   useEffect(() => {
-    localStorage.setItem('sgch_general_worship_v2', JSON.stringify(generalWorship));
-    localStorage.setItem('sgch_school_worship_v2', JSON.stringify(schoolWorship));
-  }, [generalWorship, schoolWorship]);
+    const fetchContent = async () => {
+      try {
+        const res = await fetch('/api/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.general_worship) setGeneralWorship(JSON.parse(data.general_worship));
+          if (data.school_worship) setSchoolWorship(JSON.parse(data.school_worship));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchContent();
+  }, []);
 
   const showToast = (message: string) => {
     setToast({ show: true, message });
@@ -66,35 +72,76 @@ const WorshipInfo: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const rowToSave = { ...(editingRow || { id: Date.now() }), ...formData };
-    
+
+    let updatedGeneral = generalWorship;
+    let updatedSchool = schoolWorship;
+
     if (modalType === 'general') {
       if (editingRow) {
-        setGeneralWorship(generalWorship.map(r => r.id === editingRow.id ? rowToSave : r));
+        updatedGeneral = generalWorship.map(r => r.id === editingRow.id ? rowToSave : r);
       } else {
-        setGeneralWorship([...generalWorship, rowToSave]);
+        updatedGeneral = [...generalWorship, rowToSave];
       }
+      setGeneralWorship(updatedGeneral);
     } else {
       if (editingRow) {
-        setSchoolWorship(schoolWorship.map(r => r.id === editingRow.id ? rowToSave : r));
+        updatedSchool = schoolWorship.map(r => r.id === editingRow.id ? rowToSave : r);
       } else {
-        setSchoolWorship([...schoolWorship, rowToSave]);
+        updatedSchool = [...schoolWorship, rowToSave];
       }
+      setSchoolWorship(updatedSchool);
     }
-    showToast('저장되었습니다.');
+
+    // DB 저장
+    try {
+      await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: modalType === 'general' ? 'general_worship' : 'school_worship',
+          value: JSON.stringify(modalType === 'general' ? updatedGeneral : updatedSchool)
+        })
+      });
+      showToast('저장되었습니다.');
+    } catch (err) {
+      console.error(err);
+      showToast('저장 실패');
+    }
+
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id: number, type: 'general' | 'school') => {
+  const handleDelete = async (id: number, type: 'general' | 'school') => {
     if (window.confirm('삭제하시겠습니까?')) {
+      let updatedGeneral = generalWorship;
+      let updatedSchool = schoolWorship;
+
       if (type === 'general') {
-        setGeneralWorship(generalWorship.filter(r => r.id !== id));
+        updatedGeneral = generalWorship.filter(r => r.id !== id);
+        setGeneralWorship(updatedGeneral);
       } else {
-        setSchoolWorship(schoolWorship.filter(r => r.id !== id));
+        updatedSchool = schoolWorship.filter(r => r.id !== id);
+        setSchoolWorship(updatedSchool);
       }
-      showToast('삭제되었습니다.');
+
+      // DB 저장
+      try {
+        await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            key: type === 'general' ? 'general_worship' : 'school_worship',
+            value: JSON.stringify(type === 'general' ? updatedGeneral : updatedSchool)
+          })
+        });
+        showToast('삭제되었습니다.');
+      } catch (err) {
+        console.error(err);
+        showToast('삭제 실패');
+      }
     }
   };
 
@@ -120,16 +167,16 @@ const WorshipInfo: React.FC = () => {
       <section className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-teal-50 rounded-xl">
-               <span className="material-symbols-outlined text-teal-600">calendar_month</span>
-             </div>
-             <h2 className="text-2xl font-black text-slate-800">예배</h2>
+            <div className="p-2 bg-teal-50 rounded-xl">
+              <span className="material-symbols-outlined text-teal-600">calendar_month</span>
+            </div>
+            <h2 className="text-2xl font-black text-slate-800">예배</h2>
           </div>
           {isAdmin && (
             <button onClick={() => openModal('general')} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-teal-600 transition-colors">행 추가</button>
           )}
         </div>
-        
+
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden">
           <table className="w-full text-center border-collapse">
             <thead>
@@ -165,16 +212,16 @@ const WorshipInfo: React.FC = () => {
       <section className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-teal-50 rounded-xl">
-               <span className="material-symbols-outlined text-teal-600">school</span>
-             </div>
-             <h2 className="text-2xl font-black text-slate-800">교회학교</h2>
+            <div className="p-2 bg-teal-50 rounded-xl">
+              <span className="material-symbols-outlined text-teal-600">school</span>
+            </div>
+            <h2 className="text-2xl font-black text-slate-800">교회학교</h2>
           </div>
           {isAdmin && (
             <button onClick={() => openModal('school')} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-teal-600 transition-colors">행 추가</button>
           )}
         </div>
-        
+
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden">
           <table className="w-full text-center border-collapse">
             <thead>
@@ -217,11 +264,11 @@ const WorshipInfo: React.FC = () => {
               정보 수정
             </h3>
             <form onSubmit={handleSave} className="space-y-4">
-              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="명칭 (예: 주일오전1부예배)" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="장소 (예: 본당)" value={formData.place} onChange={e => setFormData({...formData, place: e.target.value})} required />
-              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="시간 (예: 오전 9시)" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} required />
+              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="명칭 (예: 주일오전1부예배)" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="장소 (예: 본당)" value={formData.place} onChange={e => setFormData({ ...formData, place: e.target.value })} required />
+              <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="시간 (예: 오전 9시)" value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} required />
               {modalType === 'school' && (
-                <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="담당 교역자 (예: 최찬규 목사)" value={formData.teacher} onChange={e => setFormData({...formData, teacher: e.target.value})} />
+                <input className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold outline-none" placeholder="담당 교역자 (예: 최찬규 목사)" value={formData.teacher} onChange={e => setFormData({ ...formData, teacher: e.target.value })} />
               )}
               <div className="flex gap-2 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-slate-400 font-bold hover:bg-gray-50 rounded-xl">취소</button>
