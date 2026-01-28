@@ -75,8 +75,20 @@ const NewcomerItem = React.memo(({
                     )}
                 </div>
             ) : (
-                <div className="text-sm text-slate-400 italic">
-                    관리자에게만 상세 정보가 표시됩니다.
+                <div className="text-sm text-slate-600 space-y-1">
+                    <p className="flex items-center gap-2 text-slate-400">
+                        <span className="material-symbols-outlined text-xs">call</span>
+                        010-****-****
+                    </p>
+                    <p className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-xs">home</span>
+                        {person.address ? (() => {
+                            const parts = person.address.split(' ');
+                            return parts.length > 2
+                                ? parts.slice(0, -1).join(' ') + ' ***'
+                                : person.address;
+                        })() : '(주소 미입력)'}
+                    </p>
                 </div>
             )}
         </div>
