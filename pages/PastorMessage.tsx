@@ -107,7 +107,7 @@ const PastorMessage: React.FC = () => {
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-12 relative">
       {/* Admin Controls */}
       {isAdmin && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2">
           {isEditing ? (
             <>
               <button
