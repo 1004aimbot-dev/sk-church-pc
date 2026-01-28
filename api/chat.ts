@@ -1,6 +1,6 @@
-
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import { env } from 'node:process';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS 설정
@@ -21,16 +21,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const { prompt, systemInstruction } = req.body;
 
-        // 환경 변수 가져오기 (VITE_ 접두사 있어도 Node.js에서는 process.env로 접근 가능)
-        const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        // 환경 변수 가져오기 (node:process 사용)
+        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY;
 
         if (!apiKey) {
-            // 디버깅을 위해 'GEMINI'나 'API'가 포함된 키 이름만 노출 (보안상 값은 노출 금지)
-            const debugKeys = Object.keys(process.env).filter(k => k.toUpperCase().includes('GEMINI') || k.toUpperCase().includes('VITE') || k.toUpperCase().includes('KEY'));
-            console.error('SERVER: API Key Missing. Available Keys:', debugKeys);
+            // 모든 키 출력 (보안상 값은 제외)
+            const allKeys = Object.keys(env);
+            console.error('SERVER: API Key Missing. All Keys:', allKeys);
             return res.status(500).json({
                 error: `Server Build Error: API Key not found.`,
-                debug_info: `Visible Env Keys: ${debugKeys.join(', ') || 'NONE'}`
+                debug_info: `All Env Keys: ${allKeys.join(', ') || 'EMPTY_OBJECT'}`
             });
         }
 
