@@ -112,7 +112,7 @@ const AIGuide: React.FC = () => {
 
       setMessages(prev => [...prev, {
         role: 'model',
-        text: `오류가 발생했습니다.\n${isKeyError ? '🚨 API 설정이 필요합니다. 아래 회색 박스에 키를 입력하고 다시 시도해주세요.' : errorMessage}`,
+        text: `오류가 발생했습니다.\n${isKeyError ? '🚨 API 키 설정 오류입니다. 관리자가 서버 코드를 직접 수정해야 합니다.' : errorMessage}`,
         date: '오류 발생',
         isError: true,
         isKeyError: isKeyError
