@@ -21,8 +21,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const { prompt, systemInstruction } = req.body;
 
-        // 환경 변수 가져오기 (node:process 사용) 또는 헤더에서 직접 전달받기 (Emergency Bypass)
-        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || req.headers['x-gemini-api-key'];
+        // [중요] Vercel 환경 변수 오류 시, 아래 따옴표 "" 안에 직접 API Key를 붙여넣으세요.
+        // 예: const HARDCODED_KEY = "AIzaSy...";
+        const HARDCODED_KEY = "";
+
+        // 환경 변수 또는 하드코딩된 키 사용
+        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || HARDCODED_KEY;
 
         if (!apiKey) {
             // 모든 키 출력 (보안상 값은 제외)

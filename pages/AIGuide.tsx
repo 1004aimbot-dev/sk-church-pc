@@ -73,15 +73,11 @@ const AIGuide: React.FC = () => {
       3. 답변 중에 반드시 **"${userInfo.name || '성도'} ${userInfo.title}님"**이라고 호칭을 사용하여 따뜻한 유대감을 형성하십시오.
       4. 목소리는 온유하고 겸손하며, 항상 주님의 소망을 전하는 태도를 유지하십시오.`;
 
-      // 로컬 스토리지에서 비상용 키 가져오기
-      const manualKey = localStorage.getItem('sgch_gemini_key') || '';
-
-      // API 라우트로 요청 전송 (프론트엔드 키 노출 없이 안전하게 실행)
+      // API 라우트로 요청 전송
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-gemini-api-key': manualKey // 비상용 키 헤더 전송
         },
         body: JSON.stringify({
           prompt: userText,
@@ -254,34 +250,6 @@ const AIGuide: React.FC = () => {
                         <pre className="text-[10px] text-red-500 whitespace-pre-wrap font-mono leading-tight bg-red-100/50 p-2 rounded">
                           {msg.text.split('Visible Env Keys:')[1] ? 'Key 목록: ' + msg.text.split('Visible Env Keys:')[1] : '상세 정보 없음'}
                         </pre>
-                      </div>
-                    )}
-
-                    {/* Manual Key Input (Emergency) */}
-                    {msg.isKeyError && (
-                      <div className="mt-4 p-4 bg-slate-100 rounded-xl border border-slate-200">
-                        <p className="text-xs font-bold text-slate-700 mb-2">🔑 API 키 직접 입력 (비상용)</p>
-                        <div className="flex gap-2">
-                          <input
-                            type="password"
-                            placeholder="AI... 로 시작하는 키 입력"
-                            className="flex-1 text-xs p-2 rounded border border-slate-300"
-                            onChange={(e) => localStorage.setItem('sgch_gemini_key', e.target.value)}
-                          />
-                          <button
-                            onClick={() => {
-                              alert('키가 저장되었습니다. 다시 질문해주세요.');
-                              setInput('');
-                            }}
-                            className="bg-slate-800 text-white text-xs px-3 py-2 rounded font-bold hover:bg-slate-700"
-                          >
-                            저장
-                          </button>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-2 leading-tight">
-                          * Vercel 연동 문제로 키가 인식되지 않을 때 사용합니다.<br />
-                          * 입력한 키는 브라우저에만 저장되며 서버로 안전하게 전송됩니다.
-                        </p>
                       </div>
                     )}
                   </div>
