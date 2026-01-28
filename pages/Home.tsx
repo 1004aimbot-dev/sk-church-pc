@@ -16,32 +16,25 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    fetch('/api/content')
-      .then(res => res.json())
-      .then(data => {
-        if (data && Object.keys(data).length > 0) {
-          setContent(prev => ({ ...prev, ...data }));
-        }
-      })
-      .catch(err => console.error("Failed to load content:", err));
+    // 로컬 스토리지에서 콘텐츠 불러오기
+    const savedContent = localStorage.getItem('sgch_home_content');
+    if (savedContent) {
+      try {
+        setContent(prev => ({ ...prev, ...JSON.parse(savedContent) }));
+      } catch (e) {
+        console.error("Failed to parse local content", e);
+      }
+    }
   }, []);
 
-  const handleEdit = async (key: string, label: string) => {
+  const handleEdit = (key: string, label: string) => {
     const newValue = prompt(`${label} 수정:`, content[key as keyof typeof content]);
     if (newValue !== null) {
       const updatedContent = { ...content, [key]: newValue };
       setContent(updatedContent); // UI 즉시 반영
 
-      try {
-        await fetch('/api/content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, value: newValue })
-        });
-      } catch (err) {
-        console.error("Failed to save content:", err);
-        alert("저장에 실패했습니다.");
-      }
+      // 로컬 스토리지 저장
+      localStorage.setItem('sgch_home_content', JSON.stringify(updatedContent));
     }
   };
 
