@@ -12,6 +12,77 @@ interface Newcomer {
     registration_date: string;
 }
 
+// 성능 최적화를 위한 리스트 아이템 컴포넌트 분리 (React.memo)
+const NewcomerItem = React.memo(({
+    person,
+    index,
+    isAdmin,
+    editingId,
+    onEdit,
+    onDelete
+}: {
+    person: Newcomer;
+    index: number;
+    isAdmin: boolean;
+    editingId: number | null;
+    onEdit: (item: Newcomer) => void;
+    onDelete: (id: number) => void;
+}) => {
+    return (
+        <div className={`bg-white p-5 rounded-2xl shadow-sm border transition-colors group relative
+            ${editingId === person.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-100 hover:border-blue-200'}
+        `}>
+            <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-lg">{person.name}</h3>
+                    <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                        {index === 0 ? 'N' : ''} {person.birth_date}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400">
+                        {new Date(person.registration_date).toLocaleDateString()}
+                    </span>
+                    {isAdmin && (
+                        <div className="flex gap-1 ml-2">
+                            <button
+                                onClick={() => onEdit(person)}
+                                className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                title="수정"
+                            >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                            <button
+                                onClick={() => onDelete(person.id)}
+                                className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="삭제"
+                            >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {isAdmin ? (
+                <div className="text-sm text-slate-600 space-y-1">
+                    <p className="flex items-center gap-2"><span className="material-symbols-outlined text-xs">call</span> {person.phone}</p>
+                    <p className="flex items-center gap-2"><span className="material-symbols-outlined text-xs">home</span> {person.address}</p>
+                    {person.description && (
+                        <p className="mt-2 bg-yellow-50 p-2 rounded text-xs text-yellow-800 border border-yellow-100">
+                            {person.description}
+                        </p>
+                    )}
+                </div>
+            ) : (
+                <div className="text-sm text-slate-400 italic">
+                    관리자에게만 상세 정보가 표시됩니다.
+                </div>
+            )}
+        </div>
+    );
+});
+
 const NewcomerRegister: React.FC = () => {
     const { isAdmin } = useContext(AdminContext);
     const [newcomers, setNewcomers] = useState<Newcomer[]>([]);
@@ -238,58 +309,16 @@ const NewcomerRegister: React.FC = () => {
                                 아직 등록된 새가족이 없습니다.
                             </div>
                         ) : (
-                            newcomers.map(person => (
-                                <div key={person.id} className={`bg-white p-5 rounded-2xl shadow-sm border transition-colors group relative
-                                    ${editingId === person.id ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-100 hover:border-blue-200'}
-                                `}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-bold text-lg">{person.name}</h3>
-                                            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                                                {newcomers.indexOf(person) === 0 ? 'N' : ''} {person.birth_date}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] text-slate-400">
-                                                {new Date(person.registration_date).toLocaleDateString()}
-                                            </span>
-                                            {isAdmin && (
-                                                <div className="flex gap-1 ml-2">
-                                                    <button
-                                                        onClick={() => handleEdit(person)}
-                                                        className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                                        title="수정"
-                                                    >
-                                                        <span className="material-symbols-outlined text-sm">edit</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(person.id)}
-                                                        className="size-7 flex items-center justify-center rounded-lg bg-gray-50 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                                        title="삭제"
-                                                    >
-                                                        <span className="material-symbols-outlined text-sm">delete</span>
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {isAdmin ? (
-                                        <div className="text-sm text-slate-600 space-y-1">
-                                            <p className="flex items-center gap-2"><span className="material-symbols-outlined text-xs">call</span> {person.phone}</p>
-                                            <p className="flex items-center gap-2"><span className="material-symbols-outlined text-xs">home</span> {person.address}</p>
-                                            {person.description && (
-                                                <p className="mt-2 bg-yellow-50 p-2 rounded text-xs text-yellow-800 border border-yellow-100">
-                                                    {person.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="text-sm text-slate-400 italic">
-                                            관리자에게만 상세 정보가 표시됩니다.
-                                        </div>
-                                    )}
-                                </div>
+                            newcomers.map((person, index) => (
+                                <NewcomerItem
+                                    key={person.id}
+                                    person={person}
+                                    index={index}
+                                    isAdmin={isAdmin}
+                                    editingId={editingId}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                />
                             ))
                         )}
                     </div>
