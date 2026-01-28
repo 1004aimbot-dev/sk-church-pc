@@ -95,8 +95,8 @@ const AIGuide: React.FC = () => {
       console.error(error);
       setMessages(prev => [...prev, {
         role: 'model',
-        text: '주님 안에서 답변을 준비하던 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-        date: '방금 전'
+        text: `오류가 발생했습니다. (원인: ${error instanceof Error ? error.message : JSON.stringify(error)})\n\n관리자에게 이 메시지를 캡처해서 보내주세요.`,
+        date: '오류 발생'
       }]);
     } finally {
       setIsLoading(false);
