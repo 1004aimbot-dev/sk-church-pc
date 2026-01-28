@@ -21,8 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const { prompt, systemInstruction } = req.body;
 
-        // [보안] Vercel 환경 변수에서 키를 가져옵니다. (사용자가 Vercel Settings에 저장함)
-        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY;
+        // [보안] Vercel 환경 변수에서 키를 가져옵니다. (다양한 이름 시도)
+        const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || env.NEXT_PUBLIC_GEMINI_API_KEY || env.API_KEY || env.GEMINI_KEY;
 
         if (!apiKey) {
             // 모든 키 출력 (보안상 값은 제외)
