@@ -26,6 +26,24 @@ interface OfferingAccount {
   accountHolder: string;
 }
 
+// 은혜로운 썸네일 이미지 모음 (십자가, 성경, 예배, 자연, 빛)
+const GRACEFUL_IMAGES = [
+  "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=1200", // 기존
+  "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&q=80&w=1200", // 십자가와 석양
+  "https://images.unsplash.com/photo-1507692049790-de58293a4697?auto=format&fit=crop&q=80&w=1200", // 펼쳐진 성경
+  "https://images.unsplash.com/photo-1445445290350-12a3b863ad77?auto=format&fit=crop&q=80&w=1200", // 촛불과 기도
+  "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=1200", // 자연광
+  "https://images.unsplash.com/photo-1447619297994-b829cc1ab44a?auto=format&fit=crop&q=80&w=1200", // 구름 위 빛
+  "https://images.unsplash.com/photo-1510936111840-65e151ad71bb?auto=format&fit=crop&q=80&w=1200", // 예배하는 손
+  "https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&q=80&w=1200", // 교회 내부
+  "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&q=80&w=1200", // 평화로운 들판
+  "https://images.unsplash.com/photo-1449824913929-49aa711563aa?auto=format&fit=crop&q=80&w=1200", // 바다와 하늘
+  "https://images.unsplash.com/photo-1601332069884-6959145cbd48?auto=format&fit=crop&q=80&w=1200", // 십자가 실루엣
+  "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=1200", // 빛나는 구름
+];
+
+const getRandomImage = () => GRACEFUL_IMAGES[Math.floor(Math.random() * GRACEFUL_IMAGES.length)];
+
 const OnlineWorship: React.FC = () => {
   const { isAdmin } = useContext(AdminContext);
   const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
@@ -188,9 +206,25 @@ const OnlineWorship: React.FC = () => {
       setFormData({ ...sermon, startTime: secondsToTimeString(sermon.startTime), endTime: secondsToTimeString(sermon.endTime) });
     } else {
       setEditingSermon(null);
-      setFormData({ title: '', pastor: '이현용 담임목사', passage: '', series: '', date: new Date().toISOString().split('T')[0].replace(/-/g, '.'), youtubeUrl: '', startTime: '0:00', endTime: '0:00', duration: '0:00', thumbnail: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=1200' });
+      // 새 설교 등록 시 랜덤 이미지 자동 할당
+      setFormData({
+        title: '',
+        pastor: '이현용 담임목사',
+        passage: '',
+        series: '',
+        date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+        youtubeUrl: '',
+        startTime: '0:00',
+        endTime: '0:00',
+        duration: '0:00',
+        thumbnail: getRandomImage() // 랜덤 이미지 적용
+      });
     }
     setIsSermonModalOpen(true);
+  };
+
+  const handleRandomThumbnail = () => {
+    setFormData(prev => ({ ...prev, thumbnail: getRandomImage() }));
   };
 
   const handleSaveSermon = (e: React.FormEvent) => {
@@ -480,25 +514,49 @@ const OnlineWorship: React.FC = () => {
                     value={formData.endTime}
                     onChange={e => setFormData({ ...formData, endTime: e.target.value })}
                     onBlur={(e) => setFormData({ ...formData, endTime: normalizeTimeString(e.target.value) })}
+                    onChange={e => setFormData({ ...formData, endTime: normalizeTimeString(e.target.value) })}
                   />
                 </div>
               </div>
               <input className="w-full bg-gray-50 border-none rounded-xl p-3.5 text-sm font-bold outline-none" placeholder="유튜브 URL" value={formData.youtubeUrl} onChange={e => setFormData({ ...formData, youtubeUrl: e.target.value })} required />
 
-              {/* 썸네일 미리보기 */}
-              {extractVideoId(formData.youtubeUrl) && (
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                  <p className="text-xs font-bold text-slate-400 mb-2">썸네일 미리보기</p>
-                  <div className="aspect-video rounded-lg overflow-hidden bg-black/10 relative">
+              {/* 썸네일 미리보기 & 랜덤 변경 */}
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs font-bold text-slate-400">썸네일 미리보기</p>
+                  {!extractVideoId(formData.youtubeUrl) && (
+                    <button
+                      type="button"
+                      onClick={handleRandomThumbnail}
+                      className="text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">refresh</span> 이미지 변경
+                    </button>
+                  )}
+                </div>
+
+                <div className="aspect-video rounded-lg overflow-hidden bg-black/10 relative group">
+                  {extractVideoId(formData.youtubeUrl) ? (
                     <img
                       src={`https://img.youtube.com/vi/${extractVideoId(formData.youtubeUrl)}/hqdefault.jpg`}
                       className="w-full h-full object-cover"
-                      alt="Thumbnail Preview"
+                      alt="YouTube Thumbnail"
                       onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/480x360/eee/999?text=No+Image'; }}
                     />
-                  </div>
+                  ) : (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={formData.thumbnail}
+                        className="w-full h-full object-cover"
+                        alt="Default Thumbnail"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <p className="text-white text-xs font-bold drop-shadow-md">유튜브 URL 입력 시 자동 변경됨</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               <div className="flex gap-2 pt-4">
                 <button type="button" onClick={() => setIsSermonModalOpen(false)} className="flex-1 py-4 text-slate-400 font-bold hover:bg-gray-50 rounded-2xl transition-all">취소</button>
