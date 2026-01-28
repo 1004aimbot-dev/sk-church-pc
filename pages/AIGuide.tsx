@@ -88,7 +88,11 @@ const AIGuide: React.FC = () => {
         systemInstruction: personalizedInstruction
       });
 
-      const result = await model.generateContent(userText);
+      // AI에게 보내는 실제 프롬프트 (사용자 화면에는 안 보임)
+      // 매번 다른 응답을 유도하기 위해 현재 시간과 '다양성' 지시사항을 추가
+      const aiPrompt = `${userText}\n\n[System Note: Please provide a different, unique response each time. Do not repeat the same verse or prayer if asked again. Random Seed: ${new Date().getTime()}]`;
+
+      const result = await model.generateContent(aiPrompt);
       const response = await result.response;
       const responseText = response.text();
 
