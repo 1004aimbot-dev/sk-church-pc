@@ -55,33 +55,70 @@ const OnlineWorship: React.FC = () => {
   const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' });
   const [showAll, setShowAll] = useState(false);
 
-  // 헌금 계좌 데이터 상태 관리
-  const [offeringAccounts, setOfferingAccounts] = useState<OfferingAccount[]>(() => {
-    const saved = localStorage.getItem('sgch_offering_accounts_v2');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, bankName: '농협은행', accountNumber: '351-0191-2603-13', accountHolder: '성남신광교회' }
-    ];
-  });
+  // 헌금 계좌 데이터 상태 관리 (초기값: 로딩 전 기본 데이터만, localStorage 사용 안함)
+  const [offeringAccounts, setOfferingAccounts] = useState<OfferingAccount[]>([
+    { id: 1, bankName: '농협은행', accountNumber: '351-0191-2603-13', accountHolder: '성남신광교회' }
+  ]);
 
   const [accountFormData, setAccountFormData] = useState<OfferingAccount>({
     id: 0, bankName: '', accountNumber: '', accountHolder: '성남신광교회'
   });
 
-  // 설교 데이터 상태 관리
-  const [sermons, setSermons] = useState<Sermon[]>(() => {
-    const saved = localStorage.getItem('sgch_sermons');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, title: "오직 믿음으로 사는 삶", pastor: "이현용 담임목사", passage: "요한복음 3:16", series: "믿음의 능력 시리즈", date: "2026.01.04", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", startTime: 0, endTime: 300, duration: "05:00", thumbnail: "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=1200" }
-    ];
-  });
+  // 설교 데이터 상태 관리 (초기값: 로딩 전 기본 데이터만, localStorage 사용 안함)
+  const [sermons, setSermons] = useState<Sermon[]>([
+    { id: 1, title: "오직 믿음으로 사는 삶", pastor: "이현용 담임목사", passage: "요한복음 3:16", series: "믿음의 능력 시리즈", date: "2026.01.04", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", startTime: 0, endTime: 300, duration: "05:00", thumbnail: "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&q=80&w=1200" }
+  ]);
 
-
-
-  const [activeSermon, setActiveSermon] = useState<Sermon>(sermons[0]);
+  const [activeSermon, setActiveSermon] = useState<Sermon | null>(null);
   const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
   const [formData, setFormData] = useState({
     title: '', pastor: '이현용 담임목사', passage: '', series: '', date: '', youtubeUrl: '', startTime: '0:00', endTime: '0:00', duration: '', thumbnail: ''
   });
+
+  // 초기 로딩: DB에서 데이터 가져오기
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const res = await fetch('/api/content');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.offering_accounts) {
+            try {
+              setOfferingAccounts(JSON.parse(data.offering_accounts));
+            } catch (e) { console.error("Error parsing offering accounts", e); }
+          }
+          if (data.sermons_list) {
+            try {
+              const loadedSermons = JSON.parse(data.sermons_list);
+              if (Array.isArray(loadedSermons) && loadedSermons.length > 0) {
+                setSermons(loadedSermons);
+                setActiveSermon(loadedSermons[0]);
+              } else {
+                // DB에 데이터가 없거나 빈 배열일 경우 기본값 중 첫번째를 active로
+                if (sermons.length > 0) setActiveSermon(sermons[0]);
+              }
+            } catch (e) { console.error("Error parsing sermons list", e); }
+          } else {
+            // 아직 설교 데이터가 DB에 없으면 기본값 보여줌
+            if (sermons.length > 0) setActiveSermon(sermons[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch online worship data:", err);
+        // 에러 시에도 기본 데이터는 보여줘야 함
+        if (sermons.length > 0 && !activeSermon) setActiveSermon(sermons[0]);
+      }
+    };
+    fetchContent();
+  }, []); // 의존성 배열 비움 (한 번만 실행)
+
+  // activeSermon 안전 장치 (sermons 변경 시 activeSermon이 없으면 첫번째로 설정)
+  useEffect(() => {
+    if (!activeSermon && sermons.length > 0) {
+      setActiveSermon(sermons[0]);
+    }
+  }, [sermons, activeSermon]);
+
 
   // 시간 문자열 정규화 (예: 4:75 -> 5:15)
   const normalizeTimeString = (input: string): string => {
@@ -109,14 +146,6 @@ const OnlineWorship: React.FC = () => {
       return `${m}:${String(s).padStart(2, '0')}`;
     }
   };
-
-  useEffect(() => {
-    localStorage.setItem('sgch_sermons', JSON.stringify(sermons));
-  }, [sermons]);
-
-  useEffect(() => {
-    localStorage.setItem('sgch_offering_accounts_v2', JSON.stringify(offeringAccounts));
-  }, [offeringAccounts]);
 
   const secondsToTimeString = (totalSeconds: number): string => {
     if (isNaN(totalSeconds) || totalSeconds <= 0) return '0:00';
@@ -213,6 +242,7 @@ const OnlineWorship: React.FC = () => {
   };
 
   const handleAISummary = async () => {
+    if (!activeSermon) return;
     setIsAnalyzing(true);
     setIsSummaryModalOpen(true);
     setAiSummary('');
@@ -282,10 +312,13 @@ const OnlineWorship: React.FC = () => {
     if (editingSermon) {
       updatedSermons = sermons.map(s => s.id === editingSermon.id ? sermonToSave : s);
       setSermons(updatedSermons);
-      if (activeSermon.id === editingSermon.id) setActiveSermon(sermonToSave);
+      // 현재 보고 있는 설교가 수정된 경우 업데이트
+      if (activeSermon && activeSermon.id === editingSermon.id) setActiveSermon(sermonToSave);
     } else {
       updatedSermons = [sermonToSave, ...sermons];
       setSermons(updatedSermons);
+      // 새 설교 등록 시 바로 보여주기 (선택 사항)
+      setActiveSermon(sermonToSave);
     }
 
     // DB 저장
@@ -308,8 +341,11 @@ const OnlineWorship: React.FC = () => {
     if (window.confirm('이 설교 영상을 삭제하시겠습니까?')) {
       const filtered = sermons.filter(s => s.id !== id);
       setSermons(filtered);
-      if (activeSermon.id === id && filtered.length > 0) {
-        setActiveSermon(filtered[0]);
+
+      // 삭제된 설교가 현재 보고 있는 설교라면 다른 걸로 교체
+      if (activeSermon && activeSermon.id === id) {
+        if (filtered.length > 0) setActiveSermon(filtered[0]);
+        else setActiveSermon(null); // 더 이상 설교가 없음
       }
 
       // DB 저장
@@ -344,29 +380,41 @@ const OnlineWorship: React.FC = () => {
 
       {/* Main Player */}
       <div className="bg-black rounded-[2.5rem] overflow-hidden shadow-2xl aspect-video relative group border border-white/10">
-        {getEmbedUrl(activeSermon) ? (
+        {activeSermon && getEmbedUrl(activeSermon) ? (
           <iframe src={getEmbedUrl(activeSermon)!} className="w-full h-full" allowFullScreen></iframe>
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 bg-slate-900">
             <span className="material-symbols-outlined text-6xl mb-4">video_library</span>
-            <p className="font-bold">영상이 없습니다.</p>
+            <p className="font-bold">{activeSermon ? '영상이 없습니다.' : '설교 정보를 불러오는 중입니다...'}</p>
           </div>
         )}
       </div>
 
       <div className="flex flex-col lg:flex-row justify-between gap-8 pb-10 border-b border-gray-100">
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center gap-2 text-[14px] font-black">
-            <span className="text-blue-600">주일 대예배</span>
-            <span className="text-slate-200">|</span>
-            <span className="text-slate-500">{activeSermon.date}</span>
+        {activeSermon ? (
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center gap-2 text-[14px] font-black">
+              <span className="text-blue-600">주일 대예배</span>
+              <span className="text-slate-200">|</span>
+              <span className="text-slate-500">{activeSermon.date}</span>
+            </div>
+            <h1 className="font-myeongjo text-3xl md:text-4xl font-black text-slate-900 leading-tight">{activeSermon.title}</h1>
+            <p className="text-slate-400 text-[15px] font-medium">{activeSermon.pastor} • {activeSermon.series || '특별 설교'} • {activeSermon.passage}</p>
           </div>
-          <h1 className="font-myeongjo text-3xl md:text-4xl font-black text-slate-900 leading-tight">{activeSermon.title}</h1>
-          <p className="text-slate-400 text-[15px] font-medium">{activeSermon.pastor} • {activeSermon.series || '특별 설교'} • {activeSermon.passage}</p>
-        </div>
+        ) : (
+          <div className="flex-1 space-y-4 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+            <div className="h-10 bg-gray-200 rounded w-full max-w-lg mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-3 items-start shrink-0">
-          <button onClick={handleAISummary} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-blue-100 active:scale-95 text-sm">
+          <button
+            onClick={handleAISummary}
+            disabled={!activeSermon}
+            className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-blue-100 active:scale-95 text-sm ${!activeSermon ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
             <span className="material-symbols-outlined text-xl">auto_awesome</span> 설교 요약본
           </button>
 
