@@ -40,8 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const ai = new GoogleGenAI({ apiKey });
 
-        // 모델 설정 (안정적인 버전 사용)
-        const model = 'gemini-1.5-flash';
+        // 모델 설정 (버전 명시)
+        const model = 'gemini-1.5-flash-001';
 
         const response = await ai.models.generateContent({
             model,
