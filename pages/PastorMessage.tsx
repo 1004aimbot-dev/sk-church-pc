@@ -35,18 +35,34 @@ const DEFAULT_PROFILE: PastorProfile = {
 const PastorMessage: React.FC = () => {
   const { isAdmin } = useContext(AdminContext);
   const [profile, setProfile] = useState<PastorProfile>(DEFAULT_PROFILE);
-  const [isEditing, setIsEditing] = useState(false); // 관리자 모드라도 '수정 버튼'을 눌러야 편집 모드 진입
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 서버에서 데이터 불러오기
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      // API 호출 (Vercel Serverless Function)
+      const res = await fetch('/api/content');
+      if (res.ok) {
+        const data = await res.json();
+        // 'pastor_profile' 키가 있으면 파싱해서 적용
+        if (data.pastor_profile) {
+          const parsed = JSON.parse(data.pastor_profile);
+          setProfile(prev => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+      // 실패 시 로컬스토리지 백업 확인 (혹시 모를 상황 대비) 아니면 기본값 유지
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 초기 로드
   useEffect(() => {
-    const saved = localStorage.getItem('sgch_pastor_profile');
-    if (saved) {
-      try {
-        setProfile(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse saved profile', e);
-      }
-    }
+    fetchProfile();
   }, []);
 
   // 관리자 모드가 꺼지면 편집 모드도 종료
@@ -54,17 +70,38 @@ const PastorMessage: React.FC = () => {
     if (!isAdmin) setIsEditing(false);
   }, [isAdmin]);
 
-  const handleCreate = () => {
-    localStorage.setItem('sgch_pastor_profile', JSON.stringify(profile));
-    setIsEditing(false);
-    alert('인사말이 저장되었습니다.');
+  const handleCreate = async () => {
+    try {
+      // 서버에 저장
+      const res = await fetch('/api/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'pastor_profile',
+          value: JSON.stringify(profile)
+        })
+      });
+
+      if (res.ok) {
+        alert('인사말이 서버에 저장되었습니다. 모든 사용자에게 반영됩니다.');
+        setIsEditing(false);
+        // 저장 후 다시 불러와서 확실하게 동기화
+        fetchProfile();
+      } else {
+        throw new Error('저장 실패');
+      }
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert('저장에 실패했습니다. 네트워크 상태를 확인해주세요.');
+    }
   };
 
   const handleReset = () => {
-    if (window.confirm('정말로 초기 값으로 되돌리시겠습니까?')) {
+    if (window.confirm('정말로 초기 값으로 되돌리시겠습니까? 저장하지 않으면 반영되지 않습니다.')) {
       setProfile(DEFAULT_PROFILE);
-      setIsEditing(false);
-      localStorage.removeItem('sgch_pastor_profile');
+      // 여기서 바로 저장하지 않고, 사용자가 '저장'을 눌러야 반영되도록 함.
+      // 혹은 즉시 초기화 API를 원한다면 여기서 handleCreate 호출 가능. 
+      // 현재는 UI만 리셋하고 편집 상태 유지.
     }
   }
 
